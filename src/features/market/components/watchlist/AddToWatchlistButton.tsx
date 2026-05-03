@@ -6,11 +6,7 @@ import { useState } from "react";
 import { Star } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { useWatchlistStore } from "@/features/market/store";
-import {
-  useAddToWatchlist,
-  useCreateWatchlist,
-  useWatchlists,
-} from "@/features/market/hooks/useMarketQueries";
+import { useAddToWatchlist } from "@/features/market/hooks/useMarketQueries";
 import { cn } from "@/shared/utils/cn";
 
 export interface AddToWatchlistButtonProps {
@@ -30,53 +26,23 @@ export function AddToWatchlistButton({
   size = "sm",
   showText = false,
 }: AddToWatchlistButtonProps) {
-  const {
-    favoriteSymbols,
-    toggleFavorite,
-    activeWatchlistId,
-    defaultWatchlistId,
-    setDefaultWatchlistId,
-    setActiveWatchlistId,
-  } = useWatchlistStore();
+  const { favoriteSymbols, toggleFavorite } = useWatchlistStore();
   const isFavorite = favoriteSymbols.has(symbol);
   const [isLoading, setIsLoading] = useState(false);
-  const { data: watchlists = [] } = useWatchlists();
-  const { mutateAsync: createWatchlist } = useCreateWatchlist();
 
-  const resolvedWatchlistId =
-    watchlistId ||
-    activeWatchlistId ||
-    defaultWatchlistId ||
-    watchlists.find((w) => w.isDefault)?.id ||
-    watchlists[0]?.id ||
-    "";
-
-  const { mutateAsync: addToWatchlist } = useAddToWatchlist();
+  const { mutate: addToWatchlist } = useAddToWatchlist(watchlistId || "");
 
   const handleClick = async () => {
     try {
       setIsLoading(true);
-      if (isFavorite) {
-        toggleFavorite(symbol);
-        return;
-      }
-
-      let targetWatchlistId = resolvedWatchlistId;
-      if (!targetWatchlistId) {
-        const created = await createWatchlist("My Watchlist");
-        targetWatchlistId = created.id;
-        setDefaultWatchlistId(created.id);
-        setActiveWatchlistId(created.id);
-      }
-
-      if (!targetWatchlistId) {
-        throw new Error("No watchlist available");
-      }
-
-      await addToWatchlist({ watchlistId: targetWatchlistId, symbol });
       toggleFavorite(symbol);
+
+      if (watchlistId) {
+        addToWatchlist(symbol);
+      }
     } catch (error) {
       console.error("Failed to add to watchlist:", error);
+      toggleFavorite(symbol); // Revert on error
     } finally {
       setIsLoading(false);
     }

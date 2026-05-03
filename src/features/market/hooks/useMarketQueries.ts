@@ -4,7 +4,6 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 import {
   getStockQuote,
   getStockQuotesBatch,
@@ -24,7 +23,6 @@ import {
   addToWatchlist,
   removeFromWatchlist,
   reorderWatchlistItems,
-  setPriceAlert,
 } from "@/features/market/api";
 
 // ============================================================================
@@ -245,25 +243,12 @@ export const useSearchSymbols = (
   limit: number = 10,
   options?: { enabled?: boolean; debounceMs?: number },
 ) => {
-  const debounceMs = options?.debounceMs ?? 300;
-  const [debouncedQuery, setDebouncedQuery] = useState(query);
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      setDebouncedQuery(query);
-    }, debounceMs);
-
-    return () => {
-      window.clearTimeout(timeout);
-    };
-  }, [query, debounceMs]);
-
   return useQuery({
-    queryKey: marketQueryKeys.search.query(debouncedQuery),
-    queryFn: () => searchSymbols(debouncedQuery, limit),
+    queryKey: marketQueryKeys.search.query(query),
+    queryFn: () => searchSymbols(query, limit),
     staleTime: 60 * 1000,
     gcTime: 30 * 60 * 1000,
-    enabled: options?.enabled !== false && debouncedQuery.length > 0,
+    enabled: options?.enabled !== false && query.length > 0,
     retry: 1,
   });
 };
@@ -384,23 +369,14 @@ export const useDeleteWatchlist = () => {
 /**
  * Add to watchlist mutation
  */
-export const useAddToWatchlist = () => {
+export const useAddToWatchlist = (watchlistId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      watchlistId,
-      symbol,
-    }: {
-      watchlistId: string;
-      symbol: string;
-    }) => addToWatchlist(watchlistId, symbol),
-    onSuccess: (_, { watchlistId }) => {
+    mutationFn: (symbol: string) => addToWatchlist(watchlistId, symbol),
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: marketQueryKeys.watchlists.detail(watchlistId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: marketQueryKeys.watchlists.all,
       });
     },
   });
@@ -436,28 +412,6 @@ export const useReorderWatchlist = (watchlistId: string) => {
         marketQueryKeys.watchlists.detail(watchlistId),
         reorderedWatchlist,
       );
-    },
-  });
-};
-
-/**
- * Set price alert mutation
- */
-export const useSetPriceAlert = (watchlistId: string) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      itemId,
-      alertPrice,
-    }: {
-      itemId: string;
-      alertPrice: number;
-    }) => setPriceAlert(watchlistId, itemId, alertPrice),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: marketQueryKeys.watchlists.detail(watchlistId),
-      });
     },
   });
 };

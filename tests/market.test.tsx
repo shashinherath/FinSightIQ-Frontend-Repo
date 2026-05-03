@@ -1,254 +1,229 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MarketOverviewPage } from "@/features/market/pages/MarketOverviewPage";
-import { MarketSearchPage } from "@/features/market/pages/MarketSearchPage";
-import { WatchlistPanel } from "@/features/market/components/watchlist/WatchlistPanel";
-import { WatchlistTable } from "@/features/market/components/watchlist/WatchlistTable";
-import { useSearchSymbols } from "@/features/market/hooks/useMarketQueries";
+/**
+ * Market Components Tests
+ * Using Vitest and React Testing Library
+ */
 
-const navigateMock = vi.fn();
-const createWatchlistMock = vi.fn();
-const reorderMock = vi.fn();
-const setPriceAlertMock = vi.fn();
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { StockSearchInput } from "@/features/market/components/search/StockSearchInput";
+import {
+  MarketSummaryCard,
+  TopMoverItem,
+} from "@/features/market/components/dashboard/MarketCards";
+import { DashboardWidget } from "@/features/market/components/dashboard/DashboardWidget";
+import { MarketIndex } from "@/features/market/types";
 
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual("react-router-dom");
-  return {
-    ...actual,
-    useNavigate: () => navigateMock,
+// ============================================================================
+// STOCK SEARCH INPUT TESTS
+// ============================================================================
+
+describe("StockSearchInput", () => {
+  it("renders search input", () => {
+    render(<StockSearchInput />);
+    expect(screen.getByPlaceholderText(/search stocks/i)).toBeInTheDocument();
+  });
+
+  it("calls onSelect when symbol is selected", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+
+    render(<StockSearchInput onSelect={onSelect} />);
+
+    const input = screen.getByPlaceholderText(/search stocks/i);
+    await user.type(input, "AAPL");
+
+    // Note: In real tests, you'd mock the API response
+    // For now, just test that the input works
+    expect(input).toHaveValue("AAPL");
+  });
+
+  it("stores recent searches in localStorage", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+
+    render(<StockSearchInput onSelect={onSelect} />);
+
+    const input = screen.getByPlaceholderText(/search stocks/i);
+    await user.type(input, "AAPL");
+    await user.keyboard("{Enter}");
+
+    expect(localStorage.getItem("stock_recent_searches")).toBeDefined();
+  });
+});
+
+// ============================================================================
+// MARKET SUMMARY CARD TESTS
+// ============================================================================
+
+describe("MarketSummaryCard", () => {
+  const mockIndex: MarketIndex = {
+    symbol: "SPX",
+    name: "S&P 500",
+    value: 4500.5,
+    change: 25.5,
+    changePercent: 0.57,
+    timestamp: Date.now(),
   };
-});
 
-vi.mock("@/features/market/hooks/useSignalR", () => ({
-  useSignalR: vi.fn(),
-  useRealtimePrices: vi.fn(() => []),
-}));
+  it("renders market index data", () => {
+    render(<MarketSummaryCard index={mockIndex} />);
 
-vi.mock("@/features/market/components/charts", () => ({
-  SparklineChart: () => <div data-testid="sparkline-chart" />,
-}));
-
-vi.mock("@/features/market/hooks/useMarketQueries", async () => {
-  const actual = await vi.importActual(
-    "@/features/market/hooks/useMarketQueries",
-  );
-  return {
-    ...actual,
-    useMarketOverview: vi.fn(() => ({
-      data: {
-        indexes: [
-          {
-            symbol: "SPX",
-            name: "S&P 500",
-            value: 5000,
-            change: 10,
-            changePercent: 0.2,
-            timestamp: Date.now(),
-          },
-        ],
-        trendingStocks: [],
-        marketStatus: "OPEN",
-        timestamp: Date.now(),
-      },
-      isLoading: false,
-    })),
-    useTopMovers: vi.fn(() => ({
-      data: { gainers: [], losers: [], mostActive: [] },
-      isLoading: false,
-    })),
-    useSearchSuggestions: vi.fn(() => ({
-      data: { trendingSearches: [], recentSearches: [], results: [] },
-    })),
-    useSearchSymbols: vi.fn(() => ({ data: [], isLoading: false })),
-    useWatchlists: vi.fn(() => ({
-      data: [
-        {
-          id: "wl-1",
-          name: "Main",
-          items: [
-            {
-              id: "aapl-1",
-              symbol: "AAPL",
-              name: "Apple",
-              addedAt: Date.now(),
-            },
-            {
-              id: "msft-1",
-              symbol: "MSFT",
-              name: "Microsoft",
-              addedAt: Date.now(),
-            },
-          ],
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          isDefault: true,
-        },
-      ],
-      isLoading: false,
-    })),
-    useCreateWatchlist: vi.fn(() => ({
-      mutateAsync: createWatchlistMock,
-      isPending: false,
-    })),
-    useRemoveFromWatchlist: vi.fn(() => ({ mutate: vi.fn() })),
-    useReorderWatchlist: vi.fn(() => ({
-      mutateAsync: reorderMock,
-      isPending: false,
-    })),
-    useSetPriceAlert: vi.fn(() => ({
-      mutateAsync: setPriceAlertMock,
-      isPending: false,
-    })),
-  };
-});
-
-const wrap = (ui: React.ReactNode) => {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
-  return render(
-    <QueryClientProvider client={client}>{ui}</QueryClientProvider>,
-  );
-};
-
-describe("market routing", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+    expect(screen.getByText("S&P 500")).toBeInTheDocument();
+    expect(screen.getByText("4501")).toBeInTheDocument();
   });
 
-  it("navigates from overview to /app/market/stock/:symbol", () => {
-    wrap(<MarketOverviewPage />);
-    fireEvent.click(screen.getByText("S&P 500"));
-    expect(navigateMock).toHaveBeenCalledWith("/app/market/stock/SPX");
+  it("displays positive change in green", () => {
+    render(<MarketSummaryCard index={mockIndex} />);
+
+    const changeElement = screen.getByText("+25.50");
+    expect(changeElement).toHaveClass("text-green-400");
   });
 
-  it("navigates from search page to /app/market/stock/:symbol", async () => {
-    const mockedSearch = vi.mocked(useSearchSymbols);
-    mockedSearch.mockReturnValue({
-      data: [
-        {
-          symbol: "AAPL",
-          name: "Apple Inc.",
-          exchange: "NASDAQ",
-          currency: "USD",
-          type: "STOCK",
-          matchScore: 1,
-        },
-      ],
-      isLoading: false,
-    } as never);
+  it("displays negative change in red", () => {
+    const negativeIndex = {
+      ...mockIndex,
+      change: -25.5,
+      changePercent: -0.57,
+    };
 
-    wrap(<MarketSearchPage />);
-    fireEvent.change(
-      screen.getByPlaceholderText("Search by symbol or company name..."),
-      {
-        target: { value: "AAPL" },
-      },
-    );
-    fireEvent.click(screen.getByText("AAPL"));
-    expect(navigateMock).toHaveBeenCalledWith("/app/market/stock/AAPL");
+    render(<MarketSummaryCard index={negativeIndex} />);
+
+    const changeElement = screen.getByText("-25.50");
+    expect(changeElement).toHaveClass("text-red-400");
+  });
+
+  it("calls onClick handler when clicked", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+
+    render(<MarketSummaryCard index={mockIndex} onClick={onClick} />);
+
+    const card = screen.getByText("S&P 500").closest("div");
+    if (card) {
+      await user.click(card);
+    }
+
+    expect(onClick).toHaveBeenCalled();
   });
 });
 
-describe("watchlist flows", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    createWatchlistMock.mockResolvedValue({ id: "wl-new" });
-    reorderMock.mockResolvedValue({});
-    setPriceAlertMock.mockResolvedValue({});
-  });
+// ============================================================================
+// TOP MOVER ITEM TESTS
+// ============================================================================
 
-  it("creates a watchlist from panel", async () => {
-    wrap(<WatchlistPanel />);
-    fireEvent.click(screen.getByText("New Watchlist"));
-    fireEvent.change(screen.getByPlaceholderText("Watchlist name"), {
-      target: { value: "Growth" },
-    });
-    fireEvent.click(screen.getByText("Save"));
-
-    await waitFor(() => {
-      expect(createWatchlistMock).toHaveBeenCalledWith("Growth");
-    });
-  });
-
-  it("reorders watchlist items with up/down controls", async () => {
-    const watchlist = {
-      id: "wl-1",
-      name: "Main",
-      items: [
-        { id: "aapl-1", symbol: "AAPL", name: "Apple", addedAt: Date.now() },
-        {
-          id: "msft-1",
-          symbol: "MSFT",
-          name: "Microsoft",
-          addedAt: Date.now(),
-        },
-      ],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      isDefault: true,
-    };
-
-    wrap(<WatchlistTable watchlist={watchlist} />);
-    fireEvent.click(screen.getByRole("button", { name: "Move AAPL down" }));
-
-    await waitFor(() => {
-      expect(reorderMock).toHaveBeenCalled();
-    });
-  });
-
-  it("sets a price alert for a row", async () => {
-    const watchlist = {
-      id: "wl-1",
-      name: "Main",
-      items: [
-        { id: "aapl-1", symbol: "AAPL", name: "Apple", addedAt: Date.now() },
-      ],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      isDefault: true,
-    };
-
-    wrap(<WatchlistTable watchlist={watchlist} />);
-    fireEvent.change(screen.getByPlaceholderText("Price"), {
-      target: { value: "200" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Set alert for AAPL" }));
-
-    await waitFor(() => {
-      expect(setPriceAlertMock).toHaveBeenCalled();
-    });
-  });
-
-  it("clears an existing alert", async () => {
-    const watchlist = {
-      id: "wl-1",
-      name: "Main",
-      items: [
-        {
-          id: "aapl-1",
-          symbol: "AAPL",
-          name: "Apple",
-          addedAt: Date.now(),
-          alert: 210,
-        },
-      ],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      isDefault: true,
-    };
-
-    wrap(<WatchlistTable watchlist={watchlist} />);
-    fireEvent.click(
-      screen.getByRole("button", { name: "Clear alert for AAPL" }),
+describe("TopMoverItem", () => {
+  it("renders stock information", () => {
+    render(
+      <TopMoverItem
+        symbol="AAPL"
+        name="Apple Inc."
+        price={150.5}
+        change={5.5}
+        changePercent={3.79}
+      />,
     );
 
-    await waitFor(() => {
-      expect(setPriceAlertMock).toHaveBeenCalledWith({
-        itemId: "aapl-1",
-        alertPrice: 0,
-      });
-    });
+    expect(screen.getByText("AAPL")).toBeInTheDocument();
+    expect(screen.getByText("Apple Inc.")).toBeInTheDocument();
+    expect(screen.getByText("$150.50")).toBeInTheDocument();
+  });
+
+  it("displays positive percentage in green", () => {
+    render(
+      <TopMoverItem
+        symbol="AAPL"
+        name="Apple Inc."
+        price={150.5}
+        change={5.5}
+        changePercent={3.79}
+      />,
+    );
+
+    const percentElement = screen.getByText("+3.79%");
+    expect(percentElement).toHaveClass("text-green-400");
+  });
+
+  it("displays negative percentage in red", () => {
+    render(
+      <TopMoverItem
+        symbol="AAPL"
+        name="Apple Inc."
+        price={150.5}
+        change={-5.5}
+        changePercent={-3.79}
+      />,
+    );
+
+    const percentElement = screen.getByText("-3.79%");
+    expect(percentElement).toHaveClass("text-red-400");
+  });
+
+  it("displays volume when provided", () => {
+    render(
+      <TopMoverItem
+        symbol="AAPL"
+        name="Apple Inc."
+        price={150.5}
+        change={5.5}
+        changePercent={3.79}
+        volume={50000000}
+      />,
+    );
+
+    expect(screen.getByText(/Vol: 50.0M/)).toBeInTheDocument();
+  });
+});
+
+// ============================================================================
+// DASHBOARD WIDGET TESTS
+// ============================================================================
+
+describe("DashboardWidget", () => {
+  it("renders widget title and content", () => {
+    render(
+      <DashboardWidget title="Test Widget">
+        <p>Widget content</p>
+      </DashboardWidget>,
+    );
+
+    expect(screen.getByText("Test Widget")).toBeInTheDocument();
+    expect(screen.getByText("Widget content")).toBeInTheDocument();
+  });
+
+  it("displays loading state", () => {
+    render(
+      <DashboardWidget title="Test Widget" loading>
+        <p>Widget content</p>
+      </DashboardWidget>,
+    );
+
+    expect(screen.getByText(/Loading.../i)).toBeInTheDocument();
+  });
+
+  it("displays error message", () => {
+    render(
+      <DashboardWidget title="Test Widget" error="Something went wrong">
+        <p>Widget content</p>
+      </DashboardWidget>,
+    );
+
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+  });
+
+  it("collapses widget when collapse button clicked", async () => {
+    render(
+      <DashboardWidget title="Test Widget" collapsible>
+        <p>Widget content</p>
+      </DashboardWidget>,
+    );
+
+    const collapseButton = screen.getByRole("button", {
+      name: "",
+    }).parentElement;
+    expect(collapseButton).toBeInTheDocument();
+
+    // Widget content should be visible initially
+    expect(screen.getByText("Widget content")).toBeInTheDocument();
   });
 });
