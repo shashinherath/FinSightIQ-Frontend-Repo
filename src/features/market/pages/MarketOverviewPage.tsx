@@ -34,7 +34,7 @@ export function MarketOverviewPage() {
   });
 
   const handleSymbolSelect = (symbol: string) => {
-    navigate(`/market/stock/${symbol}`);
+    navigate(`/app/market/stock/${symbol}`);
   };
 
   return (

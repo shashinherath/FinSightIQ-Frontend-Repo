@@ -47,6 +47,7 @@ export {
   useAddToWatchlist,
   useRemoveFromWatchlist,
   useReorderWatchlist,
+  useSetPriceAlert,
   marketQueryKeys,
 } from "./hooks/useMarketQueries";
 

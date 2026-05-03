@@ -1,3 +1,8 @@
+# =========================
+# FinSightIQ Frontend .gitignore
+# React + TypeScript + Vite
+# =========================
+
 # Logs
 logs
 *.log
@@ -7,18 +12,92 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Package manager files
+.pnpm-store/
+.npm/
+.yarn/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Build output
+dist/
+build/
+out/
+coverage/
+
+# Vite
+vite.svg
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# IDE / Editor folders
+.vscode/
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Cache directories
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# Temporary files
+tmp/
+temp/
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+
+# Cypress
+cypress/videos/
+cypress/screenshots/
+
+# Storybook
+storybook-static/
+
+# Local Netlify/Vercel
+.netlify/
+.vercel/
+
+# Docker
+docker-compose.override.yml
+
+# Misc
+*.local
+
+# Generated files
+*.tgz
+
+# React Query / SWR cache snapshots
+*.cache.json
+
+# Optional lock files (choose based on package manager)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
