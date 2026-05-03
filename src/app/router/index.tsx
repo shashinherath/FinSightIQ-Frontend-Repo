@@ -32,10 +32,24 @@ const DashboardPage = withSuspense(
     })),
   ),
 );
-const MarketPage = withSuspense(
+const MarketOverviewPage = withSuspense(
   lazy(() =>
-    import("@/features/market/pages/MarketPage").then((module) => ({
-      default: module.MarketPage,
+    import("@/features/market/pages").then((module) => ({
+      default: module.MarketOverviewPage,
+    })),
+  ),
+);
+const StockDetailsPage = withSuspense(
+  lazy(() =>
+    import("@/features/market/pages").then((module) => ({
+      default: module.StockDetailsPage,
+    })),
+  ),
+);
+const MarketSearchPage = withSuspense(
+  lazy(() =>
+    import("@/features/market/pages").then((module) => ({
+      default: module.MarketSearchPage,
     })),
   ),
 );
@@ -94,7 +108,20 @@ export const router = createBrowserRouter([
       },
       {
         path: "market",
-        element: <MarketPage />,
+        children: [
+          {
+            index: true,
+            element: <MarketOverviewPage />,
+          },
+          {
+            path: "search",
+            element: <MarketSearchPage />,
+          },
+          {
+            path: "stock/:symbol",
+            element: <StockDetailsPage />,
+          },
+        ],
       },
       {
         path: "predictions",
