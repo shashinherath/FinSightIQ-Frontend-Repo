@@ -1,9 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
 
 @layer base {
   :root {
+    --font-display: "Space Grotesk", "IBM Plex Sans", sans-serif;
+    --font-body: "IBM Plex Sans", "Space Grotesk", sans-serif;
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -67,5 +68,60 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    font-family: var(--font-body);
+  }
+}
+
+@layer utilities {
+  @keyframes float-soft {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-18px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
+  }
+
+  @keyframes fade-up {
+    0% {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0px);
+    }
+  }
+
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  .animate-float-soft {
+    animation: float-soft 9s ease-in-out infinite;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.7s ease both;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.8s ease both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-float-soft,
+    .animate-fade-up,
+    .animate-fade-in {
+      animation: none;
+    }
   }
 }
