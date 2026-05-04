@@ -65,7 +65,7 @@ export function StockDetailsPage() {
           <Button
             variant="outline"
             className="mt-4"
-            onClick={() => navigate("/market")}
+            onClick={() => navigate("/app/market")}
           >
             Back to Market
           </Button>
@@ -84,7 +84,7 @@ export function StockDetailsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/market")}
+            onClick={() => navigate("/app/market")}
             className="text-slate-400 hover:text-slate-200"
           >
             <ArrowLeft className="h-5 w-5" />

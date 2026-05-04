@@ -4,6 +4,7 @@
  */
 
 import axios from "axios";
+import * as mocks from "@/features/market/mocks";
 import type {
   StockQuote,
   StockDetails,
@@ -24,6 +25,10 @@ const apiClient = axios.create({
   timeout: 10000,
 });
 
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true";
+
+const delay = (ms = 250) => new Promise((res) => setTimeout(res, ms));
+
 // Add request interceptor for auth token
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem("auth_token");
@@ -41,6 +46,11 @@ apiClient.interceptors.request.use((config) => {
  * Get live stock quote
  */
 export const getStockQuote = async (symbol: string): Promise<StockQuote> => {
+  if (USE_MOCKS) {
+    await delay();
+    return mocks.generateMockQuote(symbol);
+  }
+
   try {
     const response = await apiClient.get<StockQuote>(
       `/market/quotes/${symbol}`,
@@ -58,6 +68,11 @@ export const getStockQuote = async (symbol: string): Promise<StockQuote> => {
 export const getStockQuotesBatch = async (
   symbols: string[],
 ): Promise<StockQuote[]> => {
+  if (USE_MOCKS) {
+    await delay();
+    return symbols.map((s) => mocks.generateMockQuote(s));
+  }
+
   try {
     const response = await apiClient.post<StockQuote[]>(
       "/market/quotes/batch",
@@ -76,6 +91,11 @@ export const getStockQuotesBatch = async (
  * Get market overview (indexes, top movers, trending)
  */
 export const getMarketOverview = async (): Promise<MarketOverview> => {
+  if (USE_MOCKS) {
+    await delay();
+    return mocks.generateMockMarketOverview();
+  }
+
   try {
     const response = await apiClient.get<MarketOverview>("/market/overview");
     return response.data;
@@ -89,6 +109,11 @@ export const getMarketOverview = async (): Promise<MarketOverview> => {
  * Get top movers (gainers, losers, most active)
  */
 export const getTopMovers = async (): Promise<TopMovers> => {
+  if (USE_MOCKS) {
+    await delay();
+    return mocks.generateMockTopMovers();
+  }
+
   try {
     const response = await apiClient.get<TopMovers>("/market/top-movers");
     return response.data;
@@ -106,6 +131,22 @@ export const getHistoricalPrices = async (
   timeframe: "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "5Y" = "1M",
   includeIndicators: boolean = true,
 ): Promise<HistoricalPriceData> => {
+  if (USE_MOCKS) {
+    await delay();
+    return {
+      symbol,
+      timeframe,
+      data: mocks.generateMockOHLCData(symbol, 30),
+      indicators: includeIndicators
+        ? {
+            sma: mocks.generateMockOHLCData(symbol, 30).map((d) => d.close),
+          }
+        : undefined,
+      startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      endDate: new Date().toISOString(),
+    } as HistoricalPriceData;
+  }
+
   try {
     const response = await apiClient.get<HistoricalPriceData>(
       `/market/historical/${symbol}`,
@@ -129,6 +170,11 @@ export const getHistoricalPrices = async (
 export const getMarketStatistics = async (
   symbol: string,
 ): Promise<MarketStatistics> => {
+  if (USE_MOCKS) {
+    await delay();
+    return mocks.generateMockStatistics(symbol);
+  }
+
   try {
     const response = await apiClient.get<MarketStatistics>(
       `/market/statistics/${symbol}`,
@@ -144,6 +190,11 @@ export const getMarketStatistics = async (
  * Get company information
  */
 export const getCompanyInfo = async (symbol: string): Promise<CompanyInfo> => {
+  if (USE_MOCKS) {
+    await delay();
+    return mocks.generateMockCompanyInfo(symbol);
+  }
+
   try {
     const response = await apiClient.get<CompanyInfo>(
       `/market/company-info/${symbol}`,
@@ -162,6 +213,11 @@ export const getStockDetails = async (
   symbol: string,
   includeHistorical: boolean = true,
 ): Promise<StockDetails> => {
+  if (USE_MOCKS) {
+    await delay();
+    return mocks.generateMockStockDetails(symbol);
+  }
+
   try {
     const response = await apiClient.get<StockDetails>(
       `/market/stock-details/${symbol}`,
@@ -193,6 +249,10 @@ export const searchSymbols = async (
     if (!query.trim()) {
       return [];
     }
+    if (USE_MOCKS) {
+      await delay();
+      return mocks.generateMockSearchResults(query).slice(0, limit);
+    }
 
     const response = await apiClient.get<SearchResult[]>("/market/search", {
       params: {
@@ -211,6 +271,15 @@ export const searchSymbols = async (
  * Get search suggestions (recent + trending)
  */
 export const getSearchSuggestions = async (): Promise<SearchSuggestions> => {
+  if (USE_MOCKS) {
+    await delay();
+    return {
+      results: mocks.generateMockSearchResults("").slice(0, 5),
+      recentSearches: [],
+      trendingSearches: ["AAPL", "MSFT", "TSLA"],
+    } as SearchSuggestions;
+  }
+
   try {
     const response = await apiClient.get<SearchSuggestions>(
       "/market/search-suggestions",
@@ -230,6 +299,11 @@ export const getSearchSuggestions = async (): Promise<SearchSuggestions> => {
  * Get all watchlists for user
  */
 export const getWatchlists = async (): Promise<Watchlist[]> => {
+  if (USE_MOCKS) {
+    await delay();
+    return [mocks.generateMockWatchlist()];
+  }
+
   try {
     const response = await apiClient.get<Watchlist[]>("/market/watchlists");
     return response.data;
@@ -243,6 +317,11 @@ export const getWatchlists = async (): Promise<Watchlist[]> => {
  * Get single watchlist with items
  */
 export const getWatchlist = async (watchlistId: string): Promise<Watchlist> => {
+  if (USE_MOCKS) {
+    await delay();
+    return mocks.generateMockWatchlist();
+  }
+
   try {
     const response = await apiClient.get<Watchlist>(
       `/market/watchlists/${watchlistId}`,
@@ -258,6 +337,14 @@ export const getWatchlist = async (watchlistId: string): Promise<Watchlist> => {
  * Create new watchlist
  */
 export const createWatchlist = async (name: string): Promise<Watchlist> => {
+  if (USE_MOCKS) {
+    await delay();
+    const wl = mocks.generateMockWatchlist();
+    wl.name = name;
+    wl.id = `wl-${Date.now()}`;
+    return wl;
+  }
+
   try {
     const response = await apiClient.post<Watchlist>("/market/watchlists", {
       name,
@@ -307,6 +394,16 @@ export const addToWatchlist = async (
   watchlistId: string,
   symbol: string,
 ): Promise<WatchlistItem> => {
+  if (USE_MOCKS) {
+    await delay();
+    return {
+      id: `${symbol}-${Date.now()}`,
+      symbol,
+      name: symbol,
+      addedAt: Date.now(),
+    } as WatchlistItem;
+  }
+
   try {
     const response = await apiClient.post<WatchlistItem>(
       `/market/watchlists/${watchlistId}/items`,
@@ -329,6 +426,11 @@ export const removeFromWatchlist = async (
   watchlistId: string,
   itemId: string,
 ): Promise<void> => {
+  if (USE_MOCKS) {
+    await delay();
+    return;
+  }
+
   try {
     await apiClient.delete(`/market/watchlists/${watchlistId}/items/${itemId}`);
   } catch (error) {
@@ -347,6 +449,18 @@ export const reorderWatchlistItems = async (
   watchlistId: string,
   itemIds: string[],
 ): Promise<Watchlist> => {
+  if (USE_MOCKS) {
+    await delay();
+    const wl = mocks.generateMockWatchlist();
+    wl.items = itemIds.map((id, idx) => ({
+      id,
+      symbol: id.split("-")[0],
+      name: id.split("-")[0],
+      addedAt: Date.now() - idx * 1000,
+    }));
+    return wl;
+  }
+
   try {
     const response = await apiClient.post<Watchlist>(
       `/market/watchlists/${watchlistId}/reorder`,
@@ -367,6 +481,17 @@ export const setPriceAlert = async (
   itemId: string,
   alertPrice: number,
 ): Promise<WatchlistItem> => {
+  if (USE_MOCKS) {
+    await delay();
+    return {
+      id: itemId,
+      symbol: itemId.split("-")[0],
+      name: itemId.split("-")[0],
+      addedAt: Date.now(),
+      alert: alertPrice,
+    } as WatchlistItem;
+  }
+
   try {
     const response = await apiClient.post<WatchlistItem>(
       `/market/watchlists/${watchlistId}/items/${itemId}/alert`,
