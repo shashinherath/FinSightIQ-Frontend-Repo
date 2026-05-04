@@ -103,7 +103,7 @@ export function StockSearchInput({
     <div ref={containerRef} className={cn("relative w-full", className)}>
       {/* Search Input */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <input
           ref={inputRef}
           type="text"
@@ -116,9 +116,9 @@ export function StockSearchInput({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className={cn(
-            "w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg",
-            "text-slate-100 placeholder-slate-500",
-            "focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20",
+            "w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-lg",
+            "text-foreground placeholder:text-muted-foreground",
+            "focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20",
             "transition-all duration-200",
           )}
         />
@@ -128,15 +128,15 @@ export function StockSearchInput({
       {isOpen && (displayResults.length > 0 || displaySuggestions) && (
         <div
           className={cn(
-            "absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-slate-700 rounded-lg",
-            "shadow-lg shadow-black/50 z-50 max-h-96 overflow-y-auto",
+            "absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg",
+            "shadow-xl ring-1 ring-border/60 backdrop-blur-none z-[90] max-h-96 overflow-y-auto",
           )}
         >
           {/* Search Results */}
           {displayResults.length > 0 && (
             <div>
-              <div className="px-4 py-2 border-b border-slate-700">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <div className="px-4 py-2 border-b border-border">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Results
                 </p>
               </div>
@@ -146,18 +146,20 @@ export function StockSearchInput({
                   onClick={() => handleSelectSymbol(result.symbol)}
                   className={cn(
                     "w-full px-4 py-3 text-left",
-                    "hover:bg-slate-700 transition-colors duration-150",
-                    "border-b border-slate-700/50 last:border-b-0",
+                    "hover:bg-muted transition-colors duration-150",
+                    "border-b border-border/50 last:border-b-0",
                   )}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-slate-100">
+                      <p className="font-semibold text-foreground">
                         {result.symbol}
                       </p>
-                      <p className="text-sm text-slate-400">{result.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {result.name}
+                      </p>
                     </div>
-                    <span className="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">
+                    <span className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground">
                       {result.exchange}
                     </span>
                   </div>
@@ -172,8 +174,8 @@ export function StockSearchInput({
               {/* Recent Searches */}
               {displaySuggestions.recent.length > 0 && (
                 <div>
-                  <div className="px-4 py-2 border-b border-slate-700">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                  <div className="px-4 py-2 border-b border-border">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                       <Clock className="h-4 w-4" />
                       Recent
                     </p>
@@ -183,9 +185,9 @@ export function StockSearchInput({
                       key={symbol}
                       onClick={() => handleSelectSymbol(symbol)}
                       className={cn(
-                        "w-full px-4 py-3 text-left text-slate-300",
-                        "hover:bg-slate-700 transition-colors duration-150",
-                        "border-b border-slate-700/50 last:border-b-0",
+                        "w-full px-4 py-3 text-left text-foreground",
+                        "hover:bg-muted transition-colors duration-150",
+                        "border-b border-border/50 last:border-b-0",
                       )}
                     >
                       {symbol}
@@ -197,8 +199,8 @@ export function StockSearchInput({
               {/* Trending Searches */}
               {displaySuggestions.trending.length > 0 && (
                 <div>
-                  <div className="px-4 py-2 border-b border-slate-700">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                  <div className="px-4 py-2 border-b border-border">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                       <TrendingUp className="h-4 w-4" />
                       Trending
                     </p>
@@ -208,9 +210,9 @@ export function StockSearchInput({
                       key={symbol}
                       onClick={() => handleSelectSymbol(symbol)}
                       className={cn(
-                        "w-full px-4 py-3 text-left text-slate-300",
-                        "hover:bg-slate-700 transition-colors duration-150",
-                        "border-b border-slate-700/50 last:border-b-0",
+                        "w-full px-4 py-3 text-left text-foreground",
+                        "hover:bg-muted transition-colors duration-150",
+                        "border-b border-border/50 last:border-b-0",
                       )}
                     >
                       {symbol}

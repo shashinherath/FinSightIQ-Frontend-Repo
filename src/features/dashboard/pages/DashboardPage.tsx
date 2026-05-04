@@ -62,6 +62,13 @@ export function DashboardPage() {
       <section className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span
+              className="relative inline-flex h-2.5 w-2.5"
+              aria-hidden="true"
+            >
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+            </span>
             <Badge variant="secondary">Live</Badge>
             Updated 30 seconds ago
           </div>
