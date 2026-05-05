@@ -29,7 +29,10 @@ export function ThemeToggle() {
           <ActiveIcon className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
+      <DropdownMenuContent
+        align="end"
+        className="w-40 border border-border bg-card shadow-xl ring-1 ring-border/60 backdrop-blur-none"
+      >
         {themeOptions.map((option) => (
           <DropdownMenuItem
             key={option.value}

@@ -39,7 +39,7 @@ export function MarketSearchPage() {
   };
 
   const handleSelectResult = (symbol: string) => {
-    navigate(`/market/stock/${symbol}`);
+    navigate(`/app/market/stock/${symbol}`);
   };
 
   const handleClearHistory = () => {

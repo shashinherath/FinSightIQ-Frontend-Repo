@@ -68,6 +68,7 @@ export const useSubscribeToPrice = (
 ) => {
   const serviceRef = useRef<ReturnType<typeof getSignalRService> | null>(null);
   const callbackRef = useRef(options?.onUpdate);
+  const registeredRef = useRef(false);
 
   useEffect(() => {
     callbackRef.current = options?.onUpdate;
@@ -83,13 +84,14 @@ export const useSubscribeToPrice = (
       // Subscribe to price updates
       service.subscribeToPrice(symbol);
 
-      // Setup listener if callback provided
-      if (!callbackRef.current) {
+      // Register one shared listener that gates by symbol
+      if (!registeredRef.current) {
         service.onPriceUpdate((data) => {
           if (data.symbol === symbol) {
             callbackRef.current?.(data);
           }
         });
+        registeredRef.current = true;
       }
     } catch (error) {
       console.error(`Failed to subscribe to ${symbol}:`, error);
@@ -121,6 +123,7 @@ export const useSubscribeToMultiplePrices = (
   const serviceRef = useRef<ReturnType<typeof getSignalRService> | null>(null);
   const previousSymbolsRef = useRef<string[]>([]);
   const callbackRef = useRef(options?.onUpdate);
+  const registeredRef = useRef(false);
 
   useEffect(() => {
     callbackRef.current = options?.onUpdate;
@@ -150,11 +153,12 @@ export const useSubscribeToMultiplePrices = (
         service.subscribeToPrice(symbol);
       });
 
-      // Setup listener if callback provided and not already set
-      if (!callbackRef.current) {
+      // Register one shared listener for tracked symbols
+      if (!registeredRef.current) {
         service.onPriceUpdate((data) => {
           callbackRef.current?.(data);
         });
+        registeredRef.current = true;
       }
 
       previousSymbolsRef.current = symbols;

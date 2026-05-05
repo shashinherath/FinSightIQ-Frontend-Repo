@@ -53,10 +53,31 @@ const MarketSearchPage = withSuspense(
     })),
   ),
 );
-const PredictionsPage = withSuspense(
+const PredictionsDashboardPage = withSuspense(
   lazy(() =>
-    import("@/features/predictions/pages/PredictionsPage").then((module) => ({
-      default: module.PredictionsPage,
+    import("@/features/predictions/pages").then((module) => ({
+      default: module.PredictionsDashboardPage,
+    })),
+  ),
+);
+const PredictionHistoryPage = withSuspense(
+  lazy(() =>
+    import("@/features/predictions/pages").then((module) => ({
+      default: module.PredictionHistoryPage,
+    })),
+  ),
+);
+const ModelAnalyticsPage = withSuspense(
+  lazy(() =>
+    import("@/features/predictions/pages").then((module) => ({
+      default: module.ModelAnalyticsPage,
+    })),
+  ),
+);
+const PredictionDetailsPage = withSuspense(
+  lazy(() =>
+    import("@/features/predictions/pages").then((module) => ({
+      default: module.PredictionDetailsPage,
     })),
   ),
 );
@@ -125,7 +146,24 @@ export const router = createBrowserRouter([
       },
       {
         path: "predictions",
-        element: <PredictionsPage />,
+        children: [
+          {
+            index: true,
+            element: <PredictionsDashboardPage />,
+          },
+          {
+            path: "history",
+            element: <PredictionHistoryPage />,
+          },
+          {
+            path: "models",
+            element: <ModelAnalyticsPage />,
+          },
+          {
+            path: ":predictionId",
+            element: <PredictionDetailsPage />,
+          },
+        ],
       },
       {
         path: "portfolio",

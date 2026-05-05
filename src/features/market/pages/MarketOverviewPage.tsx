@@ -19,6 +19,7 @@ import {
 import { StockSearchInput } from "@/features/market/components/search/StockSearchInput";
 import { useSignalR } from "@/features/market/hooks/useSignalR";
 import { cn } from "@/shared/utils/cn";
+import { Badge } from "@/shared/ui/badge";
 
 export function MarketOverviewPage() {
   const navigate = useNavigate();
@@ -34,23 +35,31 @@ export function MarketOverviewPage() {
   });
 
   const handleSymbolSelect = (symbol: string) => {
-    navigate(`/market/stock/${symbol}`);
+    navigate(`/app/market/stock/${symbol}`);
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-8 pb-12">
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-100 mb-2">
+      <section className="space-y-2">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span className="relative inline-flex h-2.5 w-2.5" aria-hidden="true">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+          </span>
+          <Badge variant="secondary">Live</Badge>
+          Updated every 15 seconds
+        </div>
+        <h1 className="text-3xl font-semibold tracking-tight">
           Market Overview
         </h1>
-        <p className="text-slate-400">
+        <p className="text-sm text-muted-foreground">
           Track live market data across global exchanges
         </p>
-      </div>
+      </section>
 
       {/* Search Bar */}
-      <div className="sticky top-0 z-10 bg-slate-900 pb-4">
+      <div className="sticky top-0 z-20 bg-background/95 pb-4">
         <StockSearchInput onSelect={handleSymbolSelect} />
       </div>
 
@@ -72,7 +81,7 @@ export function MarketOverviewPage() {
               />
             ))
           ) : (
-            <p className="text-slate-400">No market data available</p>
+            <p className="text-muted-foreground">No market data available</p>
           )}
         </div>
       </DashboardWidget>
@@ -101,7 +110,7 @@ export function MarketOverviewPage() {
                 />
               ))
             ) : (
-              <p className="text-slate-400 text-sm">No data available</p>
+              <p className="text-muted-foreground text-sm">No data available</p>
             )}
           </div>
         </DashboardWidget>
@@ -129,7 +138,7 @@ export function MarketOverviewPage() {
                 />
               ))
             ) : (
-              <p className="text-slate-400 text-sm">No data available</p>
+              <p className="text-muted-foreground text-sm">No data available</p>
             )}
           </div>
         </DashboardWidget>
@@ -157,7 +166,7 @@ export function MarketOverviewPage() {
                 />
               ))
             ) : (
-              <p className="text-slate-400 text-sm">No data available</p>
+              <p className="text-muted-foreground text-sm">No data available</p>
             )}
           </div>
         </DashboardWidget>
@@ -185,7 +194,7 @@ export function MarketOverviewPage() {
               />
             ))
           ) : (
-            <p className="text-slate-400">No trending data available</p>
+            <p className="text-muted-foreground">No trending data available</p>
           )}
         </div>
       </DashboardWidget>
@@ -196,21 +205,21 @@ export function MarketOverviewPage() {
           className={cn(
             "p-4 rounded-lg border",
             overview.marketStatus === "OPEN"
-              ? "border-green-700/30 bg-green-900/10"
-              : "border-slate-700 bg-slate-800/50",
+              ? "border-emerald-500/30 bg-emerald-500/10"
+              : "border-border/60 bg-muted/30",
           )}
         >
           <p
             className={cn(
               "text-sm font-semibold",
               overview.marketStatus === "OPEN"
-                ? "text-green-400"
-                : "text-slate-400",
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-muted-foreground",
             )}
           >
             Market Status: {overview.marketStatus.replace(/_/g, " ")}
           </p>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Last updated: {new Date(overview.timestamp).toLocaleTimeString()}
           </p>
         </div>

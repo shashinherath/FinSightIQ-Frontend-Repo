@@ -41,18 +41,18 @@ export function DashboardWidget({
   return (
     <div
       className={cn(
-        "border border-slate-700 rounded-lg bg-slate-800/50 overflow-hidden",
-        "transition-all duration-200 hover:border-slate-600",
+        "rounded-xl border border-border/60 bg-background overflow-hidden shadow-sm",
+        "transition-all duration-200 hover:border-border",
         isExpanded && "fixed inset-0 z-50 m-4 rounded-xl",
         className,
       )}
     >
       {/* Widget Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700 bg-slate-800/80">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-muted/30">
         <div className="flex-1">
-          <h3 className="font-semibold text-slate-100">{title}</h3>
+          <h3 className="font-semibold text-foreground">{title}</h3>
           {description && (
-            <p className="text-xs text-slate-400">{description}</p>
+            <p className="text-xs text-muted-foreground">{description}</p>
           )}
         </div>
 
@@ -62,7 +62,7 @@ export function DashboardWidget({
               variant="ghost"
               size="sm"
               onClick={onConfigure}
-              className="text-slate-400 hover:text-slate-200"
+              className="text-muted-foreground hover:text-foreground"
             >
               <Settings className="h-4 w-4" />
             </Button>
@@ -72,7 +72,7 @@ export function DashboardWidget({
             variant="ghost"
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-slate-400 hover:text-slate-200"
+            className="text-muted-foreground hover:text-foreground"
           >
             {isExpanded ? (
               <Minimize2 className="h-4 w-4" />
@@ -86,7 +86,7 @@ export function DashboardWidget({
               variant="ghost"
               size="sm"
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="text-slate-400 hover:text-slate-200"
+              className="text-muted-foreground hover:text-foreground"
             >
               <ChevronDown
                 className={cn(
@@ -102,7 +102,7 @@ export function DashboardWidget({
               variant="ghost"
               size="sm"
               onClick={onRemove}
-              className="text-slate-400 hover:text-red-400"
+              className="text-muted-foreground hover:text-destructive"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -121,13 +121,13 @@ export function DashboardWidget({
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
-                <p className="mt-4 text-slate-400">Loading...</p>
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+                <p className="mt-4 text-muted-foreground">Loading...</p>
               </div>
             </div>
           ) : error ? (
             <div className="text-center py-12">
-              <p className="text-red-400 text-sm">{error}</p>
+              <p className="text-destructive text-sm">{error}</p>
             </div>
           ) : (
             children
@@ -147,7 +147,7 @@ export function WidgetSkeleton({ lines = 3, className }: WidgetSkeletonProps) {
   return (
     <div className={cn("space-y-3", className)}>
       {[...Array(lines)].map((_, i) => (
-        <div key={i} className="h-4 bg-slate-700 rounded animate-pulse" />
+        <div key={i} className="h-4 bg-muted rounded animate-pulse" />
       ))}
     </div>
   );
