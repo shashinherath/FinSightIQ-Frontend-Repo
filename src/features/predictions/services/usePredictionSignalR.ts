@@ -27,7 +27,7 @@ export const usePredictionSignalR = (enabled = true) => {
       enableMockStream: import.meta.env.VITE_USE_MOCKS !== "false",
     });
 
-    service.connect().catch((error) => {
+    void Promise.resolve(service.connect()).catch((error) => {
       console.error("Prediction SignalR connection failed:", error);
     });
 
@@ -68,7 +68,7 @@ export const usePredictionSignalR = (enabled = true) => {
         flushTimer.current = null;
       }
       unsubscribe();
-      service.disconnect().catch((error) => {
+      void Promise.resolve(service.disconnect()).catch((error) => {
         console.error("Prediction SignalR disconnect failed:", error);
       });
     };

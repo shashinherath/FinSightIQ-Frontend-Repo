@@ -130,7 +130,9 @@ const makeShap = (rand: () => number): ShapFeatureContribution[] =>
       feature,
       value: Number((rand() * 100).toFixed(2)),
       impact: Number(impact.toFixed(3)),
-      direction: impact >= 0 ? "POSITIVE" : "NEGATIVE",
+      direction: (impact >= 0 ? "POSITIVE" : "NEGATIVE") as
+        | "POSITIVE"
+        | "NEGATIVE",
     };
   }).sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact));
 

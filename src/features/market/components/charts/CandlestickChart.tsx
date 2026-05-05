@@ -1,12 +1,6 @@
-/**
- * Candlestick Chart Component
- * Financial charting with ApexCharts
- */
-
-import { useMemo } from "react";
-import ReactApexChart from "react-apexcharts";
 import type { OHLCData, TechnicalIndicators } from "@/features/market/types";
 import { useMarketStore } from "@/features/market/store";
+import { TradingViewCandlestickChart } from "@/shared/components/TradingViewCharts";
 
 export interface CandlestickChartProps {
   symbol: string;
@@ -23,146 +17,9 @@ export function CandlestickChart({
   indicators,
   height = 400,
   loading = false,
-
   showIndicators = true,
 }: CandlestickChartProps) {
   const { indicatorsShown } = useMarketStore();
-
-  // Format data for ApexCharts candlestick
-  const chartData = useMemo(() => {
-    if (!data || data.length === 0) {
-      return [];
-    }
-
-    return data.map((candle) => ({
-      x: new Date(candle.timestamp),
-      y: [candle.open, candle.high, candle.low, candle.close],
-    }));
-  }, [data]);
-
-  // Prepare series data
-  const series = useMemo(() => {
-    const candleData = {
-      name: `${symbol} OHLC`,
-      data: chartData,
-    };
-
-    // Add technical indicators if present
-    const indicatorSeries = [];
-
-    if (showIndicators && indicators?.sma && indicatorsShown.sma) {
-      indicatorSeries.push({
-        name: "SMA",
-        type: "line" as const,
-        data: indicators.sma.map((value, index) => ({
-          x: chartData[index]?.x,
-          y: value?.toFixed(2),
-        })),
-      });
-    }
-
-    if (showIndicators && indicators?.ema && indicatorsShown.ema) {
-      indicatorSeries.push({
-        name: "EMA",
-        type: "line" as const,
-        data: indicators.ema.map((value, index) => ({
-          x: chartData[index]?.x,
-          y: value?.toFixed(2),
-        })),
-      });
-    }
-
-    return [candleData, ...indicatorSeries];
-  }, [chartData, symbol, indicators, indicatorsShown, showIndicators]);
-
-  const options: ApexCharts.ApexOptions = {
-    chart: {
-      type: "candlestick",
-      height: height,
-      zoom: {
-        enabled: true,
-        type: "x",
-        autoScaleYaxis: true,
-      },
-      toolbar: {
-        tools: {
-          download: true,
-          selection: true,
-          zoom: true,
-          zoomin: true,
-          zoomout: true,
-          pan: true,
-          reset: true,
-        },
-        autoSelected: "zoom",
-      },
-      animations: {
-        enabled: true,
-        speed: 800,
-        animateGradually: {
-          enabled: true,
-          delay: 150,
-        },
-      },
-    },
-    theme: {
-      mode: "dark",
-    },
-    plotOptions: {
-      candlestick: {
-        colors: {
-          upward: "#10b981",
-          downward: "#ef4444",
-        },
-        wick: {
-          useFillColor: true,
-        },
-      },
-    },
-    xaxis: {
-      type: "datetime",
-      tooltip: {
-        enabled: true,
-      },
-    },
-    yaxis: {
-      tooltip: {
-        enabled: true,
-      },
-    },
-    tooltip: {
-      enabled: true,
-      shared: true,
-      intersect: false,
-      theme: "dark",
-      x: {
-        format: "dd MMM yyyy HH:mm",
-      },
-      y: {
-        formatter: (value) => {
-          if (typeof value === "number") {
-            return value.toFixed(2);
-          }
-          return value;
-        },
-      },
-    },
-    grid: {
-      show: true,
-      borderColor: "#404040",
-      padding: {
-        left: 20,
-        right: 20,
-      },
-    },
-    states: {
-      hover: {
-        filter: {
-          type: "darken",
-        },
-      },
-    },
-  };
 
   if (loading) {
     return (
@@ -178,7 +35,7 @@ export function CandlestickChart({
     );
   }
 
-  if (!chartData || chartData.length === 0) {
+  if (!data || data.length === 0) {
     return (
       <div
         className="flex items-center justify-center bg-slate-900 rounded-lg"
@@ -191,11 +48,58 @@ export function CandlestickChart({
 
   return (
     <div className="w-full">
-      <ReactApexChart
-        options={options}
-        series={series as ApexCharts.ApexOptions["series"]}
-        type="candlestick"
+      <TradingViewCandlestickChart
+        data={data}
         height={height}
+        loading={loading}
+        overlays={
+          showIndicators
+            ? [
+                ...(indicators?.sma && indicatorsShown.sma
+                  ? [
+                      {
+                        name: `${symbol} SMA`,
+                        color: "#38bdf8",
+                        values: indicators.sma
+                          .map((value, index) => {
+                            const candle = data[index];
+                            return candle && value != null
+                              ? { timestamp: candle.timestamp, value }
+                              : null;
+                          })
+                          .filter(
+                            (
+                              entry,
+                            ): entry is { timestamp: number; value: number } =>
+                              entry !== null,
+                          ),
+                      },
+                    ]
+                  : []),
+                ...(indicators?.ema && indicatorsShown.ema
+                  ? [
+                      {
+                        name: `${symbol} EMA`,
+                        color: "#f59e0b",
+                        values: indicators.ema
+                          .map((value, index) => {
+                            const candle = data[index];
+                            return candle && value != null
+                              ? { timestamp: candle.timestamp, value }
+                              : null;
+                          })
+                          .filter(
+                            (
+                              entry,
+                            ): entry is { timestamp: number; value: number } =>
+                              entry !== null,
+                          ),
+                      },
+                    ]
+                  : []),
+              ]
+            : []
+        }
       />
     </div>
   );

@@ -53,10 +53,10 @@ const MarketSearchPage = withSuspense(
     })),
   ),
 );
-const PredictionsDashboardPage = withSuspense(
+const PredictionsPage = withSuspense(
   lazy(() =>
     import("@/features/predictions/pages").then((module) => ({
-      default: module.PredictionsDashboardPage,
+      default: module.PredictionsPage,
     })),
   ),
 );
@@ -149,7 +149,7 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <PredictionsDashboardPage />,
+            element: <PredictionsPage />,
           },
           {
             path: "history",
