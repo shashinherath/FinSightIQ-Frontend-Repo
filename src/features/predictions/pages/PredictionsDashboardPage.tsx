@@ -6,6 +6,7 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { FeaturePageShell } from "@/shared/components/FeaturePageShell";
+import { AssetToggle } from "@/shared/components/AssetToggle";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { PredictionForm } from "@/features/predictions/components/PredictionForm";
 import {
@@ -38,6 +39,7 @@ import {
 } from "@/features/predictions/query/prediction.query";
 import { usePredictionStore } from "@/features/predictions/store/predictionStore";
 import { usePredictionSignalR } from "@/features/predictions/services/usePredictionSignalR";
+import { useAssetType } from "@/app/hooks/useAssetType";
 import type {
   ForecastHorizon,
   PredictionModel,
@@ -57,6 +59,7 @@ const MultiModelChart = lazy(() =>
 export function PredictionsDashboardPage() {
   usePredictionSignalR();
   const navigate = useNavigate();
+  const { assetType, isForex } = useAssetType();
 
   const sectionMotion = {
     initial: { opacity: 0, y: 16 },
@@ -132,6 +135,7 @@ export function PredictionsDashboardPage() {
       description="Generate forecasts, review the why behind each signal, and keep an eye on model quality."
       action={
         <div className="flex flex-wrap items-center gap-2">
+          <AssetToggle className="sm:hidden" />
           <Button
             variant="outline"
             onClick={() => navigate("/app/predictions/history")}
@@ -209,9 +213,10 @@ export function PredictionsDashboardPage() {
       >
         <div className="space-y-6">
           <PredictionForm
+            assetType={assetType}
             isSubmitting={isGenerating}
             defaultValues={{
-              symbol: selectedSymbol,
+              symbol: selectedSymbol || (isForex ? "EUR/USD" : "AAPL"),
               model: selectedModel,
               horizon: selectedHorizon,
               confidencePreference,
@@ -316,7 +321,7 @@ export function PredictionsDashboardPage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <PredictionExplanationCard
-                  text={`AI forecast generated ${formatDateTime(summaryPrediction.createdAt)}. Current market conditions indicate a ${summaryPrediction.direction.toLowerCase()} trajectory with ${formatPercent(summaryPrediction.confidence, 0)} confidence.`}
+                  text={`AI forecast generated ${formatDateTime(summaryPrediction.createdAt)}. Current market conditions indicate a ${summaryPrediction.direction.toLowerCase()} trajectory with ${formatPercent(summaryPrediction.confidence, 0)} confidence.${isForex ? " Forex pairs typically move on macro and rate differentials rather than earnings." : ""}`}
                 />
                 <div className="rounded-xl border border-border/60 bg-background p-4">
                   <div className="flex items-center justify-between">

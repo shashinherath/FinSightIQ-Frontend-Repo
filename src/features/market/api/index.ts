@@ -5,6 +5,14 @@
 
 import axios from "axios";
 import * as mocks from "@/features/market/mocks";
+import type { AssetType } from "@/app/store/assetStore";
+import {
+  getForexDashboardData,
+  getForexHistoricalRates,
+  getForexMovers,
+  getLiveForexRate,
+  searchForexPairs,
+} from "@/features/forex/api/forex.api";
 import type {
   StockQuote,
   StockDetails,
@@ -18,6 +26,13 @@ import type {
   Watchlist,
   WatchlistItem,
 } from "@/features/market/types";
+import type {
+  ForexDashboardData,
+  ForexHistoricalSeries,
+  ForexSearchResult,
+  ForexTimeframe,
+  ForexQuote,
+} from "@/features/forex/types/forex.types";
 
 // Configure API client
 const apiClient = axios.create({
@@ -502,6 +517,64 @@ export const setPriceAlert = async (
     console.error(`Failed to set price alert:`, error);
     throw error;
   }
+};
+
+// ============================================================================
+// MULTI-ASSET HELPERS
+// ============================================================================
+
+export const getMarketData = async (
+  assetType: AssetType,
+): Promise<MarketOverview | ForexDashboardData> => {
+  return assetType === "forex" ? getForexDashboardData() : getMarketOverview();
+};
+
+export const getMarketHistoricalData = async (
+  assetType: AssetType,
+  symbol: string,
+  timeframe: "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "5Y" | ForexTimeframe,
+): Promise<HistoricalPriceData | ForexHistoricalSeries> => {
+  if (assetType === "forex") {
+    return getForexHistoricalRates(symbol, timeframe as ForexTimeframe);
+  }
+
+  return getHistoricalPrices(
+    symbol,
+    timeframe as "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "5Y",
+  );
+};
+
+export const searchMarketAssets = async (
+  assetType: AssetType,
+  query: string,
+  limit = 10,
+): Promise<SearchResult[] | ForexSearchResult[]> => {
+  if (assetType === "forex") {
+    return searchForexPairs(query, limit);
+  }
+
+  return searchSymbols(query, limit);
+};
+
+export const getMarketMovers = async (
+  assetType: AssetType,
+): Promise<TopMovers | ForexDashboardData> => {
+  if (assetType === "forex") {
+    return getForexMovers();
+  }
+
+  return getTopMovers();
+};
+
+export const getMarketQuote = async (
+  assetType: AssetType,
+  symbol: string,
+): Promise<StockQuote | ForexQuote> => {
+  if (assetType === "forex") {
+    return getLiveForexRate(symbol);
+  }
+
+  return getStockQuote(symbol);
 };
 
 // ============================================================================

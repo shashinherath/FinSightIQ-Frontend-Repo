@@ -163,7 +163,17 @@ export function TradingViewCandlestickChart({
 
   const normalized = useMemo<CandlestickData[] | null>(() => {
     if (!data.length) return null;
-    return data.map((item) => ({
+    // Deduplicate by business day first
+    const seen = new Set<string>();
+    const unique = data.filter((item) => {
+      const date = new Date(item.timestamp);
+      const key = `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return unique.map((item) => ({
       time: formatBusinessDay(item.timestamp),
       open: item.open,
       high: item.high,
@@ -173,14 +183,28 @@ export function TradingViewCandlestickChart({
   }, [data]);
 
   const overlaySeriesData = useMemo(() => {
-    return overlays.map((overlay) => ({
-      name: overlay.name,
-      data: overlay.values.map((point) => ({
+    return overlays.map((overlay) => {
+      // Deduplicate by business day first
+      const seen = new Set<string>();
+      const unique = overlay.values.filter((point) => {
+        const date = new Date(point.timestamp);
+        const key = `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      const data = unique.map((point) => ({
         time: formatBusinessDay(point.timestamp),
         value: point.value,
-      })) as LineData<Time>[],
-      color: overlay.color,
-    }));
+      })) as LineData<Time>[];
+
+      return {
+        name: overlay.name,
+        data,
+        color: overlay.color,
+      };
+    });
   }, [overlays]);
 
   useEffect(() => {
@@ -288,7 +312,17 @@ export function TradingViewVolumeChart({
 
   const normalized = useMemo<LineData<Time>[] | null>(() => {
     if (!data.length) return null;
-    return data.map((item) => ({
+    // Deduplicate by business day first
+    const seen = new Set<string>();
+    const unique = data.filter((item) => {
+      const date = new Date(item.timestamp);
+      const key = `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return unique.map((item) => ({
       time: formatBusinessDay(item.timestamp),
       value: item.volume,
     }));
@@ -383,7 +417,17 @@ export function TradingViewSparklineChart({
 
   const normalized = useMemo<LineData<Time>[] | null>(() => {
     if (!data.length) return null;
-    return data.map((item) => ({
+    // Deduplicate by business day first
+    const seen = new Set<string>();
+    const unique = data.filter((item) => {
+      const date = new Date(item.timestamp);
+      const key = `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return unique.map((item) => ({
       time: formatBusinessDay(item.timestamp),
       value: item.close,
     }));
@@ -475,13 +519,27 @@ export function TradingViewLineChart({
 
   const normalizedSeries = useMemo(
     () =>
-      series.map((entry) => ({
-        ...entry,
-        data: entry.values.map((point) => ({
+      series.map((entry) => {
+        // Deduplicate by business day first
+        const seen = new Set<string>();
+        const unique = entry.values.filter((point) => {
+          const date = new Date(point.timestamp);
+          const key = `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+        const data = unique.map((point) => ({
           time: formatBusinessDay(point.timestamp),
           value: point.value,
-        })) as LineData<Time>[],
-      })),
+        })) as LineData<Time>[];
+
+        return {
+          ...entry,
+          data,
+        };
+      }),
     [series],
   );
 
