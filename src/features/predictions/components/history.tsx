@@ -26,6 +26,7 @@ export function PredictionHistoryTable({
   onSelect?: (item: PredictionHistoryItem) => void;
 }) {
   const parentRef = useRef<HTMLDivElement | null>(null);
+  const shouldVirtualize = items.length > 20;
 
   const rowVirtualizer = useVirtualizer({
     count: items.length,
@@ -34,8 +35,10 @@ export function PredictionHistoryTable({
     overscan: 8,
   });
 
-  const virtualItems = rowVirtualizer.getVirtualItems();
-  const totalHeight = rowVirtualizer.getTotalSize();
+  const virtualItems = shouldVirtualize ? rowVirtualizer.getVirtualItems() : [];
+  const totalHeight = shouldVirtualize
+    ? rowVirtualizer.getTotalSize()
+    : items.length * 56;
 
   const headers = useMemo(
     () => [
@@ -60,22 +63,56 @@ export function PredictionHistoryTable({
         </div>
       </div>
       <div ref={parentRef} className="max-h-[480px] overflow-auto">
-        <div style={{ height: totalHeight }} className="relative">
-          {virtualItems.map((virtualRow) => {
-            const item = items[virtualRow.index];
-            return (
+        {shouldVirtualize ? (
+          <div style={{ height: totalHeight }} className="relative">
+            {virtualItems.map((virtualRow) => {
+              const item = items[virtualRow.index];
+              return (
+                <button
+                  type="button"
+                  key={item.id}
+                  onClick={() => onSelect?.(item)}
+                  className={cn(
+                    "absolute left-0 right-0 grid grid-cols-7 gap-2 px-4 text-left text-sm",
+                    "border-b border-border/40 py-3 transition-colors hover:bg-muted/30",
+                  )}
+                  style={{
+                    transform: `translateY(${virtualRow.start}px)`,
+                    height: `${virtualRow.size}px`,
+                  }}
+                >
+                  <span className="font-semibold text-foreground">
+                    {item.symbol}
+                  </span>
+                  <span className="text-muted-foreground">{item.model}</span>
+                  <span className="text-muted-foreground">{item.horizon}</span>
+                  <span className="text-foreground">
+                    {formatCurrency(item.predictedPrice)}
+                  </span>
+                  <span className="text-foreground">
+                    {formatPercent(item.confidence, 0)}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {formatDateTime(item.createdAt)}
+                  </span>
+                  <span>
+                    <PredictionAccuracyBadge success={item.success} />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div>
+            {items.map((item) => (
               <button
                 type="button"
                 key={item.id}
                 onClick={() => onSelect?.(item)}
                 className={cn(
-                  "absolute left-0 right-0 grid grid-cols-7 gap-2 px-4 text-left text-sm",
-                  "border-b border-border/40 py-3 transition-colors hover:bg-muted/30",
+                  "grid w-full grid-cols-7 gap-2 px-4 py-3 text-left text-sm",
+                  "border-b border-border/40 transition-colors hover:bg-muted/30",
                 )}
-                style={{
-                  transform: `translateY(${virtualRow.start}px)`,
-                  height: `${virtualRow.size}px`,
-                }}
               >
                 <span className="font-semibold text-foreground">
                   {item.symbol}
@@ -95,9 +132,9 @@ export function PredictionHistoryTable({
                   <PredictionAccuracyBadge success={item.success} />
                 </span>
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

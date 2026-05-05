@@ -53,6 +53,27 @@ const MarketSearchPage = withSuspense(
     })),
   ),
 );
+const ForexDashboardPage = withSuspense(
+  lazy(() =>
+    import("@/features/forex/pages").then((module) => ({
+      default: module.ForexDashboardPage,
+    })),
+  ),
+);
+const ForexSearchPage = withSuspense(
+  lazy(() =>
+    import("@/features/forex/pages").then((module) => ({
+      default: module.ForexSearchPage,
+    })),
+  ),
+);
+const ForexPairDetailsPage = withSuspense(
+  lazy(() =>
+    import("@/features/forex/pages").then((module) => ({
+      default: module.ForexPairDetailsPage,
+    })),
+  ),
+);
 const PredictionsDashboardPage = withSuspense(
   lazy(() =>
     import("@/features/predictions/pages").then((module) => ({
@@ -141,6 +162,23 @@ export const router = createBrowserRouter([
           {
             path: "stock/:symbol",
             element: <StockDetailsPage />,
+          },
+        ],
+      },
+      {
+        path: "forex",
+        children: [
+          {
+            index: true,
+            element: <ForexDashboardPage />,
+          },
+          {
+            path: "search",
+            element: <ForexSearchPage />,
+          },
+          {
+            path: "pair/:pair",
+            element: <ForexPairDetailsPage />,
           },
         ],
       },

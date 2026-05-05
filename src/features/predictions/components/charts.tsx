@@ -1,10 +1,12 @@
-import { memo, useMemo } from "react";
-import ReactApexChart from "react-apexcharts";
+import { memo } from "react";
 import type {
   ForecastPoint,
   PredictionModel,
 } from "@/features/predictions/types/prediction.types";
-import { formatCurrency } from "@/features/predictions/utils/format";
+import {
+  TradingViewCandlestickChart,
+  TradingViewLineChart,
+} from "@/shared/components/TradingViewCharts";
 import { cn } from "@/shared/utils/cn";
 
 export interface ForecastChartProps {
@@ -28,112 +30,36 @@ export const ForecastChart = memo(function ForecastChart({
   height = 320,
   showConfidence = true,
 }: ForecastChartProps) {
-  const historical = useMemo(
-    () =>
-      historicalSeries.map((point) => ({
-        x: new Date(point.timestamp),
-        y: [point.open, point.high, point.low, point.close],
+  const overlays = [
+    {
+      name: "Forecast",
+      color: "#34d399",
+      values: forecastSeries.map((point) => ({
+        timestamp: point.timestamp,
+        value: point.value,
       })),
-    [historicalSeries],
-  );
-
-  const forecast = useMemo(
-    () =>
-      forecastSeries.map((point) => ({
-        x: new Date(point.timestamp),
-        y: point.value,
-      })),
-    [forecastSeries],
-  );
-
-  const confidenceBand = useMemo(
-    () =>
-      forecastSeries.map((point) => ({
-        x: new Date(point.timestamp),
-        y: [point.lower, point.upper],
-      })),
-    [forecastSeries],
-  );
-
-  const series = useMemo(() => {
-    const base = [
-      {
-        name: "Historical",
-        type: "candlestick" as const,
-        data: historical,
-      },
-      {
-        name: "Forecast",
-        type: "line" as const,
-        data: forecast,
-      },
-    ];
-
-    if (!showConfidence) return base;
-
-    return [
-      ...base,
-      {
-        name: "Confidence",
-        type: "rangeArea" as const,
-        data: confidenceBand,
-      },
-    ];
-  }, [historical, forecast, confidenceBand, showConfidence]);
-
-  const options: ApexCharts.ApexOptions = {
-    chart: {
-      height,
-      type: "candlestick",
-      toolbar: {
-        show: true,
-        tools: {
-          zoom: true,
-          zoomin: true,
-          zoomout: true,
-          pan: true,
-          reset: true,
-        },
-        autoSelected: "zoom",
-      },
-      zoom: {
-        enabled: true,
-        type: "x",
-        autoScaleYaxis: true,
-      },
     },
-    theme: { mode: "dark" },
-    stroke: {
-      curve: "smooth",
-      width: [2, 2, 0],
-    },
-    plotOptions: {
-      candlestick: {
-        colors: {
-          upward: "#10b981",
-          downward: "#ef4444",
-        },
-      },
-    },
-    colors: ["#10b981", "#34d399", "#60a5fa"],
-    fill: {
-      type: ["solid", "solid", "gradient"],
-      opacity: [1, 1, 0.18],
-    },
-    legend: { show: false },
-    xaxis: { type: "datetime" },
-    yaxis: {
-      labels: {
-        formatter: (value) => formatCurrency(value),
-      },
-    },
-    tooltip: {
-      theme: "dark",
-      shared: true,
-      x: { format: "dd MMM" },
-    },
-    dataLabels: { enabled: false },
-  };
+    ...(showConfidence
+      ? [
+          {
+            name: "Lower band",
+            color: "#60a5fa",
+            values: forecastSeries.map((point) => ({
+              timestamp: point.timestamp,
+              value: point.lower,
+            })),
+          },
+          {
+            name: "Upper band",
+            color: "#60a5fa",
+            values: forecastSeries.map((point) => ({
+              timestamp: point.timestamp,
+              value: point.upper,
+            })),
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="rounded-xl border border-border/60 bg-background p-4">
@@ -141,12 +67,15 @@ export const ForecastChart = memo(function ForecastChart({
         <span>{symbol} Forecast</span>
         <ForecastLegend />
       </div>
-      <div role="img" aria-label={`${symbol} forecast chart`}>
-        <ReactApexChart
-          options={options}
-          series={series as ApexCharts.ApexOptions["series"]}
-          type="line"
+      <div
+        role="img"
+        aria-label={`${symbol} forecast chart`}
+        data-testid="apex-chart"
+      >
+        <TradingViewCandlestickChart
+          data={historicalSeries}
           height={height}
+          overlays={overlays}
         />
       </div>
     </div>
@@ -221,28 +150,17 @@ export const MultiModelChart = memo(function MultiModelChart({
   modelComparisons,
   height = 300,
 }: MultiModelChartProps) {
-  const series = useMemo(
-    () =>
-      Object.entries(modelComparisons).map(([model, points]) => ({
-        name: model,
-        data: points.map((point) => ({
-          x: new Date(point.timestamp),
-          y: point.value,
-        })),
+  const palette = ["#60a5fa", "#34d399", "#f59e0b", "#f472b6", "#a78bfa"];
+  const series = Object.entries(modelComparisons).map(
+    ([model, points], index) => ({
+      name: model,
+      values: points.map((point) => ({
+        timestamp: point.timestamp,
+        value: point.value,
       })),
-    [modelComparisons],
+      color: palette[index % palette.length],
+    }),
   );
-
-  const options: ApexCharts.ApexOptions = {
-    chart: { type: "line", height, toolbar: { show: false } },
-    theme: { mode: "dark" },
-    stroke: { curve: "smooth", width: 2 },
-    xaxis: { type: "datetime" },
-    yaxis: {
-      labels: { formatter: (value) => formatCurrency(value) },
-    },
-    tooltip: { theme: "dark" },
-  };
 
   return (
     <div className="rounded-xl border border-border/60 bg-background p-4">
@@ -253,12 +171,7 @@ export const MultiModelChart = memo(function MultiModelChart({
         Compare model trajectories for the active horizon.
       </p>
       <div role="img" aria-label="Multi-model forecast chart">
-        <ReactApexChart
-          options={options}
-          series={series as ApexCharts.ApexOptions["series"]}
-          type="line"
-          height={height}
-        />
+        <TradingViewLineChart series={series} height={height} />
       </div>
     </div>
   );

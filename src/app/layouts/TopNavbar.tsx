@@ -12,6 +12,7 @@ import {
 } from "@/shared/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { ThemeToggle } from "@/shared/components/ThemeToggle";
+import { AssetToggle } from "@/shared/components/AssetToggle";
 
 export function TopNavbar() {
   const { isSidebarCollapsed, toggleSidebar } = useLayoutStore();
@@ -37,6 +38,7 @@ export function TopNavbar() {
       </div>
 
       <div className="flex items-center gap-2">
+        <AssetToggle className="hidden sm:inline-flex" />
         <ThemeToggle />
 
         <DropdownMenu>

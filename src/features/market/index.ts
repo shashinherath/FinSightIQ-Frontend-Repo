@@ -71,6 +71,15 @@ export {
 // Store
 export { useMarketStore, useWatchlistStore, useRealtimeStore } from "./store";
 
+// Multi-asset helpers
+export {
+  getMarketData,
+  getMarketHistoricalData,
+  getMarketMovers,
+  getMarketQuote,
+  searchMarketAssets,
+} from "./api";
+
 // Types
 export type {
   StockQuote,
