@@ -39,102 +39,117 @@ export function DashboardWidget({
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div
-      className={cn(
-        "rounded-xl border border-border/60 bg-background overflow-hidden shadow-sm",
-        "transition-all duration-200 hover:border-border",
-        isExpanded && "fixed inset-0 z-50 m-4 rounded-xl",
-        className,
+    <>
+      {isExpanded && (
+        <div
+          className="fixed inset-0 z-40 bg-background/85 backdrop-blur-sm"
+          aria-hidden="true"
+        />
       )}
-    >
-      {/* Widget Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-muted/30">
-        <div className="flex-1">
-          <h3 className="font-semibold text-foreground">{title}</h3>
-          {description && (
-            <p className="text-xs text-muted-foreground">{description}</p>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          {configurable && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onConfigure}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-          )}
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            {isExpanded ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
-            )}
-          </Button>
-
-          {collapsible && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <ChevronDown
-                className={cn(
-                  "h-4 w-4 transition-transform duration-200",
-                  isCollapsed && "-rotate-90",
-                )}
-              />
-            </Button>
-          )}
-
-          {removable && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onRemove}
-              className="text-muted-foreground hover:text-destructive"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Widget Content */}
-      {!isCollapsed && (
+      <div
+        className={cn(
+          "rounded-xl border border-border/60 bg-background overflow-hidden shadow-sm",
+          "transition-all duration-200 hover:border-border",
+          isExpanded &&
+            "fixed inset-0 z-50 m-4 rounded-xl bg-card shadow-2xl ring-1 ring-border/70",
+          className,
+        )}
+        style={isExpanded ? { backgroundColor: "hsl(var(--card))" } : undefined}
+      >
+        {/* Widget Header */}
         <div
           className={cn(
-            "p-4",
-            isExpanded && "h-[calc(100vh-120px)] overflow-y-auto",
+            "flex items-center justify-between px-4 py-3 border-b border-border/60",
+            isExpanded ? "bg-muted" : "bg-muted/30",
           )}
         >
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-                <p className="mt-4 text-muted-foreground">Loading...</p>
-              </div>
-            </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <p className="text-destructive text-sm">{error}</p>
-            </div>
-          ) : (
-            children
-          )}
+          <div className="flex-1">
+            <h3 className="font-semibold text-foreground">{title}</h3>
+            {description && (
+              <p className="text-xs text-muted-foreground">{description}</p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {configurable && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onConfigure}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            )}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {isExpanded ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+            </Button>
+
+            {collapsible && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 transition-transform duration-200",
+                    isCollapsed && "-rotate-90",
+                  )}
+                />
+              </Button>
+            )}
+
+            {removable && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onRemove}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
-      )}
-    </div>
+
+        {/* Widget Content */}
+        {!isCollapsed && (
+          <div
+            className={cn(
+              "p-4",
+              isExpanded && "h-[calc(100vh-120px)] overflow-y-auto",
+            )}
+          >
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+                  <p className="mt-4 text-muted-foreground">Loading...</p>
+                </div>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <p className="text-destructive text-sm">{error}</p>
+              </div>
+            ) : (
+              children
+            )}
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 

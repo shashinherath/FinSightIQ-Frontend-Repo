@@ -131,8 +131,12 @@ export function PredictionsDashboardPage() {
 
   return (
     <FeaturePageShell
-      title="Predictions"
-      description="Generate forecasts, review the why behind each signal, and keep an eye on model quality."
+      title={isForex ? "FX Predictions" : "Predictions"}
+      description={
+        isForex
+          ? "Generate forex forecasts, review the why behind each signal, and keep an eye on model quality."
+          : "Generate forecasts, review the why behind each signal, and keep an eye on model quality."
+      }
       action={
         <div className="flex flex-wrap items-center gap-2">
           <AssetToggle className="sm:hidden" />
@@ -151,7 +155,7 @@ export function PredictionsDashboardPage() {
           <Button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
-            New prediction
+            {isForex ? "New FX prediction" : "New prediction"}
             <ArrowUpRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
@@ -169,7 +173,7 @@ export function PredictionsDashboardPage() {
             {avgConfidence ? formatPercent(avgConfidence, 0) : "--"}
           </p>
           <p className="text-xs text-muted-foreground">
-            Across recent forecasts
+            {isForex ? "Across recent FX forecasts" : "Across recent forecasts"}
           </p>
         </div>
         <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
@@ -191,7 +195,9 @@ export function PredictionsDashboardPage() {
             {topSignals.length}
           </p>
           <p className="text-xs text-muted-foreground">
-            Signals above 75% confidence
+            {isForex
+              ? "FX signals above 75% confidence"
+              : "Signals above 75% confidence"}
           </p>
         </div>
         <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
@@ -202,7 +208,9 @@ export function PredictionsDashboardPage() {
               : "--"}
           </p>
           <p className="text-xs text-muted-foreground">
-            Overall directional hit rate
+            {isForex
+              ? "FX directional hit rate"
+              : "Overall directional hit rate"}
           </p>
         </div>
       </motion.section>
@@ -226,13 +234,19 @@ export function PredictionsDashboardPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Latest forecast</CardTitle>
+              <CardTitle className="text-base">
+                {isForex ? "Latest FX forecast" : "Latest forecast"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {!summaryPrediction ? (
                 <EmptyState
-                  title="No prediction yet"
-                  description="Choose a symbol above to generate your first forecast."
+                  title={isForex ? "No FX forecast yet" : "No prediction yet"}
+                  description={
+                    isForex
+                      ? "Choose a currency pair above to generate your first forecast."
+                      : "Choose a symbol above to generate your first forecast."
+                  }
                   icon={<Brain className="h-5 w-5" />}
                 />
               ) : (
@@ -376,10 +390,14 @@ export function PredictionsDashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  Why the model thinks this
+                  {isForex
+                    ? "Why the model thinks this FX move happens"
+                    : "Why the model thinks this"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Feature contribution and reasoning details in plain language.
+                  {isForex
+                    ? "Feature contribution and reasoning details in plain language for currency pairs."
+                    : "Feature contribution and reasoning details in plain language."}
                 </p>
               </div>
               <ForecastLegend />
@@ -405,8 +423,16 @@ export function PredictionsDashboardPage() {
               </div>
             ) : (
               <EmptyState
-                title="Explainability pending"
-                description="Run a prediction to see the SHAP breakdown and reasoning panel."
+                title={
+                  isForex
+                    ? "FX explainability pending"
+                    : "Explainability pending"
+                }
+                description={
+                  isForex
+                    ? "Run a forex prediction to see the SHAP breakdown and reasoning panel."
+                    : "Run a prediction to see the SHAP breakdown and reasoning panel."
+                }
                 icon={<Brain className="h-5 w-5" />}
               />
             )}
@@ -416,7 +442,9 @@ export function PredictionsDashboardPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Recent forecasts</CardTitle>
+              <CardTitle className="text-base">
+                {isForex ? "Recent FX forecasts" : "Recent forecasts"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {historyLoading ? (

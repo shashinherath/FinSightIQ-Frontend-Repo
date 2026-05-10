@@ -13,49 +13,90 @@ import { Skeleton } from "@/shared/ui/skeleton";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { DashboardCard } from "@/features/dashboard/components/DashboardCard";
 import { OverviewStatCard } from "@/features/dashboard/components/OverviewStatCard";
+import { useAssetType } from "@/app/hooks/useAssetType";
 import { cn } from "@/shared/utils/cn";
-
-const marketOverview = [
-  {
-    label: "S&P 500",
-    value: "5,203.41",
-    change: "+1.2%",
-    trend: "up" as const,
-  },
-  {
-    label: "NASDAQ",
-    value: "16,424.88",
-    change: "+0.7%",
-    trend: "up" as const,
-  },
-  {
-    label: "Dow Jones",
-    value: "38,112.02",
-    change: "-0.2%",
-    trend: "down" as const,
-  },
-];
-
-const watchlist = [
-  { symbol: "AAPL", price: "$188.41", change: "+1.4%", trend: "up" },
-  { symbol: "NVDA", price: "$912.18", change: "+2.1%", trend: "up" },
-  { symbol: "TSLA", price: "$184.92", change: "-0.8%", trend: "down" },
-];
-
-const predictions = [
-  { symbol: "MSFT", confidence: "92%", signal: "BUY" },
-  { symbol: "AMZN", confidence: "76%", signal: "HOLD" },
-  { symbol: "META", confidence: "68%", signal: "BUY" },
-];
-
-const topMovers = [
-  { symbol: "PLTR", change: "+6.2%", trend: "up" },
-  { symbol: "NET", change: "+4.8%", trend: "up" },
-  { symbol: "SNOW", change: "-3.9%", trend: "down" },
-];
 
 export function DashboardPage() {
   const isLoading = false;
+  const { isForex } = useAssetType();
+
+  const overviewCards = isForex
+    ? [
+        {
+          label: "EUR/USD",
+          value: "1.0842",
+          change: "+0.3%",
+          trend: "up" as const,
+        },
+        {
+          label: "GBP/USD",
+          value: "1.2718",
+          change: "-0.1%",
+          trend: "down" as const,
+        },
+        {
+          label: "USD/JPY",
+          value: "154.62",
+          change: "+0.2%",
+          trend: "up" as const,
+        },
+      ]
+    : [
+        {
+          label: "S&P 500",
+          value: "5,203.41",
+          change: "+1.2%",
+          trend: "up" as const,
+        },
+        {
+          label: "NASDAQ",
+          value: "16,424.88",
+          change: "+0.7%",
+          trend: "up" as const,
+        },
+        {
+          label: "Dow Jones",
+          value: "38,112.02",
+          change: "-0.2%",
+          trend: "down" as const,
+        },
+      ];
+
+  const watchlist = isForex
+    ? [
+        { symbol: "EUR/USD", price: "1.0842", change: "+0.3%", trend: "up" },
+        { symbol: "GBP/USD", price: "1.2718", change: "-0.1%", trend: "down" },
+        { symbol: "USD/JPY", price: "154.62", change: "+0.2%", trend: "up" },
+      ]
+    : [
+        { symbol: "AAPL", price: "$188.41", change: "+1.4%", trend: "up" },
+        { symbol: "NVDA", price: "$912.18", change: "+2.1%", trend: "up" },
+        { symbol: "TSLA", price: "$184.92", change: "-0.8%", trend: "down" },
+      ];
+
+  const predictions = isForex
+    ? [
+        { symbol: "EUR/USD", confidence: "89%", signal: "BUY" },
+        { symbol: "GBP/USD", confidence: "73%", signal: "HOLD" },
+        { symbol: "USD/JPY", confidence: "64%", signal: "SELL" },
+      ]
+    : [
+        { symbol: "MSFT", confidence: "92%", signal: "BUY" },
+        { symbol: "AMZN", confidence: "76%", signal: "HOLD" },
+        { symbol: "META", confidence: "68%", signal: "BUY" },
+      ];
+
+  const topMovers = isForex
+    ? [
+        { symbol: "EUR/USD", change: "+0.6%", trend: "up" },
+        { symbol: "AUD/USD", change: "+0.4%", trend: "up" },
+        { symbol: "USD/CHF", change: "-0.3%", trend: "down" },
+      ]
+    : [
+        { symbol: "PLTR", change: "+6.2%", trend: "up" },
+        { symbol: "NET", change: "+4.8%", trend: "up" },
+        { symbol: "SNOW", change: "-3.9%", trend: "down" },
+      ];
 
   return (
     <div className="space-y-8">
@@ -74,21 +115,24 @@ export function DashboardPage() {
           </div>
           <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
-            Track your markets, portfolio, and AI-generated forecasts in one
-            place.
+            {isForex
+              ? "Track currency pairs, FX momentum, and AI-generated forecasts in one place."
+              : "Track your markets, portfolio, and AI-generated forecasts in one place."}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline">Create alert</Button>
+          <Button variant="outline">
+            {isForex ? "Create FX alert" : "Create alert"}
+          </Button>
           <Button>
-            New forecast
+            {isForex ? "New FX forecast" : "New forecast"}
             <ArrowUpRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
-        {marketOverview.map((card) => (
+        {overviewCards.map((card) => (
           <OverviewStatCard
             key={card.label}
             label={card.label}
@@ -102,8 +146,12 @@ export function DashboardPage() {
 
       <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <DashboardCard
-          title="Watchlist"
-          description="Live prices for your tracked symbols"
+          title={isForex ? "FX Watchlist" : "Watchlist"}
+          description={
+            isForex
+              ? "Live prices for your tracked currency pairs"
+              : "Live prices for your tracked symbols"
+          }
           action={<Button variant="ghost">Manage</Button>}
         >
           {isLoading ? (
@@ -121,7 +169,7 @@ export function DashboardPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Symbol</TableHead>
+                  <TableHead>{isForex ? "Pair" : "Symbol"}</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead className="text-right">Change</TableHead>
                 </TableRow>
@@ -150,8 +198,10 @@ export function DashboardPage() {
         </DashboardCard>
 
         <DashboardCard
-          title="AI Predictions"
-          description="Top confidence signals"
+          title={isForex ? "FX Predictions" : "AI Predictions"}
+          description={
+            isForex ? "Top FX confidence signals" : "Top confidence signals"
+          }
           action={<Button variant="ghost">View all</Button>}
         >
           <div className="space-y-4">
@@ -184,33 +234,65 @@ export function DashboardPage() {
 
       <section className="grid gap-6 lg:grid-cols-[1fr_1fr]">
         <DashboardCard
-          title="Portfolio snapshot"
-          description="Today's allocation and performance"
-          action={<Button variant="ghost">Open portfolio</Button>}
+          title={isForex ? "FX exposure snapshot" : "Portfolio snapshot"}
+          description={
+            isForex
+              ? "Currency exposure and intraday performance"
+              : "Today's allocation and performance"
+          }
+          action={
+            <Button variant="ghost">
+              {isForex ? "Open FX book" : "Open portfolio"}
+            </Button>
+          }
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-              <p className="text-xs text-muted-foreground">Net worth</p>
-              <p className="text-xl font-semibold">$248,920</p>
-              <p className="text-xs text-emerald-500">+3.4% this week</p>
-            </div>
-            <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-              <p className="text-xs text-muted-foreground">Risk score</p>
-              <p className="text-xl font-semibold">Moderate</p>
               <p className="text-xs text-muted-foreground">
-                Balanced growth allocation
+                {isForex ? "Base exposure" : "Net worth"}
+              </p>
+              <p className="text-xl font-semibold">
+                {isForex ? "$182,400" : "$248,920"}
+              </p>
+              <p className="text-xs text-emerald-500">
+                {isForex ? "+1.8% this week" : "+3.4% this week"}
               </p>
             </div>
             <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-              <p className="text-xs text-muted-foreground">Cash available</p>
-              <p className="text-xl font-semibold">$18,240</p>
-              <p className="text-xs text-emerald-500">Ready to deploy</p>
+              <p className="text-xs text-muted-foreground">
+                {isForex ? "FX risk score" : "Risk score"}
+              </p>
+              <p className="text-xl font-semibold">
+                {isForex ? "Moderate" : "Moderate"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {isForex
+                  ? "Balanced currency exposure"
+                  : "Balanced growth allocation"}
+              </p>
             </div>
             <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-              <p className="text-xs text-muted-foreground">Forecast bias</p>
-              <p className="text-xl font-semibold">Bullish</p>
               <p className="text-xs text-muted-foreground">
-                AI signals skew positive
+                {isForex ? "Margin available" : "Cash available"}
+              </p>
+              <p className="text-xl font-semibold">
+                {isForex ? "$24,100" : "$18,240"}
+              </p>
+              <p className="text-xs text-emerald-500">
+                {isForex ? "Ready for FX trades" : "Ready to deploy"}
+              </p>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+              <p className="text-xs text-muted-foreground">
+                {isForex ? "Forecast bias" : "Forecast bias"}
+              </p>
+              <p className="text-xl font-semibold">
+                {isForex ? "USD strong" : "Bullish"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {isForex
+                  ? "AI signals favor the dollar"
+                  : "AI signals skew positive"}
               </p>
             </div>
           </div>
@@ -218,31 +300,43 @@ export function DashboardPage() {
 
         <div className="grid gap-6">
           <DashboardCard
-            title="Market sentiment"
-            description="News-driven momentum"
+            title={isForex ? "FX sentiment" : "Market sentiment"}
+            description={
+              isForex
+                ? "Macro and rate-driven momentum"
+                : "News-driven momentum"
+            }
           >
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
-                  Sentiment index
+                  {isForex ? "Rate index" : "Sentiment index"}
                 </span>
                 <span className="text-sm font-semibold text-emerald-500">
-                  Positive
+                  {isForex ? "Neutral" : "Positive"}
                 </span>
               </div>
               <div className="h-2 w-full rounded-full bg-muted">
-                <div className="h-2 w-3/4 rounded-full bg-emerald-500" />
+                <div
+                  className={cn(
+                    "h-2 rounded-full",
+                    isForex ? "w-1/2 bg-blue-500" : "w-3/4 bg-emerald-500",
+                  )}
+                />
               </div>
               <p className="text-xs text-muted-foreground">
-                AI models detected sustained optimism across technology and
-                industrial sectors.
+                {isForex
+                  ? "AI models detected steady macro pressure around rates and dollar strength."
+                  : "AI models detected sustained optimism across technology and industrial sectors."}
               </p>
             </div>
           </DashboardCard>
 
           <DashboardCard
-            title="Top movers"
-            description="Largest intraday moves"
+            title={isForex ? "Top FX movers" : "Top movers"}
+            description={
+              isForex ? "Largest intraday pair moves" : "Largest intraday moves"
+            }
           >
             <div className="space-y-3">
               {topMovers.map((mover) => (

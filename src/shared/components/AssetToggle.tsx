@@ -5,6 +5,8 @@ import { useAssetType } from "@/app/hooks/useAssetType";
 
 const STOCK_ROUTE = "/app/market";
 const FOREX_ROUTE = "/app/forex";
+const selectedToggleClass =
+  "bg-foreground text-background shadow-sm ring-1 ring-border/20 hover:bg-foreground/90 hover:text-background";
 
 export function AssetToggle({ className }: { className?: string }) {
   const location = useLocation();
@@ -36,9 +38,12 @@ export function AssetToggle({ className }: { className?: string }) {
     >
       <Button
         type="button"
-        variant={assetType === "stock" ? "default" : "ghost"}
+        variant="ghost"
         size="sm"
-        className="h-8 rounded-full px-3 text-xs font-semibold"
+        className={cn(
+          "h-8 rounded-full px-3 text-xs font-semibold",
+          assetType === "stock" && selectedToggleClass,
+        )}
         aria-pressed={assetType === "stock"}
         onClick={() => handleToggle("stock")}
       >
@@ -46,9 +51,12 @@ export function AssetToggle({ className }: { className?: string }) {
       </Button>
       <Button
         type="button"
-        variant={assetType === "forex" ? "default" : "ghost"}
+        variant="ghost"
         size="sm"
-        className="h-8 rounded-full px-3 text-xs font-semibold"
+        className={cn(
+          "h-8 rounded-full px-3 text-xs font-semibold",
+          assetType === "forex" && selectedToggleClass,
+        )}
         aria-pressed={assetType === "forex"}
         onClick={() => handleToggle("forex")}
       >

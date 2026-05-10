@@ -133,7 +133,10 @@
 .apexcharts-xaxistooltip,
 .apexcharts-yaxistooltip,
 .apexcharts-yaxistooltip-left,
-.apexcharts-yaxistooltip-right {
+.apexcharts-yaxistooltip-right,
+.apexcharts-tooltip-title,
+.apexcharts-tooltip-series-group,
+.apexcharts-menu.apexcharts-menu-open {
   background: hsl(var(--card)) !important;
   border: 1px solid hsl(var(--border)) !important;
   color: hsl(var(--card-foreground)) !important;
@@ -146,6 +149,7 @@
 
 .apexcharts-menu-item {
   color: hsl(var(--card-foreground)) !important;
+  background: hsl(var(--card)) !important;
 }
 
 .apexcharts-menu-item:hover {

@@ -13,8 +13,15 @@ export function ForexSearchDropdown({
   if (results.length === 0) return null;
 
   return (
-    <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-border/60 bg-background shadow-xl">
-      <div className="max-h-80 overflow-auto p-2">
+    <div
+      className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-border/60 bg-card text-card-foreground shadow-xl"
+      style={{ backgroundColor: "hsl(var(--card))", opacity: 1 }}
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 rounded-xl bg-card"
+      />
+      <div className="relative max-h-80 overflow-auto p-2">
         {results.map((result, index) => (
           <button
             key={result.symbol}
