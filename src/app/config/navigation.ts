@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   LineChart,
+  ArrowUpDown,
   TrendingUp,
   Briefcase,
   MessageSquare,
@@ -25,6 +26,11 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     name: "Market",
     href: "/app/market",
     icon: LineChart,
+  },
+  {
+    name: "Forex",
+    href: "/app/forex",
+    icon: ArrowUpDown,
   },
   {
     name: "Predictions",
