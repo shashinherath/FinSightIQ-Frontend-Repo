@@ -11,6 +11,14 @@ import {
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const highlights = [
   { label: "Predictions streamed", value: "2.1M" },
@@ -74,6 +82,16 @@ const steps = [
     description:
       "Monitor outcomes, automate alerts, and adapt to volatility faster.",
   },
+];
+
+const momentumChartData = [
+  { day: "Mon", momentum: 34, baseline: 22 },
+  { day: "Tue", momentum: 41, baseline: 25 },
+  { day: "Wed", momentum: 38, baseline: 28 },
+  { day: "Thu", momentum: 52, baseline: 31 },
+  { day: "Fri", momentum: 58, baseline: 36 },
+  { day: "Sat", momentum: 64, baseline: 39 },
+  { day: "Sun", momentum: 61, baseline: 42 },
 ];
 
 export function LandingPage() {
@@ -193,7 +211,88 @@ export function LandingPage() {
                         <span>Today</span>
                         <span>AI confidence 94%</span>
                       </div>
-                      <div className="mt-4 h-32 w-full rounded-xl bg-[linear-gradient(120deg,_hsl(var(--primary)/0.4),_transparent_60%)]" />
+                      <div className="mt-4 h-36 w-full rounded-xl border border-border/40 bg-background/60 p-3">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={momentumChartData}>
+                            <defs>
+                              <linearGradient
+                                id="momentumFill"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                              >
+                                <stop
+                                  offset="5%"
+                                  stopColor="hsl(var(--primary))"
+                                  stopOpacity={0.45}
+                                />
+                                <stop
+                                  offset="95%"
+                                  stopColor="hsl(var(--primary))"
+                                  stopOpacity={0.02}
+                                />
+                              </linearGradient>
+                              <linearGradient
+                                id="baselineFill"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                              >
+                                <stop
+                                  offset="5%"
+                                  stopColor="hsl(var(--chart-2))"
+                                  stopOpacity={0.35}
+                                />
+                                <stop
+                                  offset="95%"
+                                  stopColor="hsl(var(--chart-2))"
+                                  stopOpacity={0.02}
+                                />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid
+                              stroke="hsl(var(--border))"
+                              strokeDasharray="4 6"
+                              vertical={false}
+                            />
+                            <XAxis
+                              dataKey="day"
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{
+                                fill: "hsl(var(--muted-foreground))",
+                                fontSize: 11,
+                              }}
+                              padding={{ left: 8, right: 8 }}
+                            />
+                            <YAxis hide domain={[0, 80]} />
+                            <Area
+                              type="monotone"
+                              dataKey="baseline"
+                              stroke="hsl(var(--chart-2))"
+                              strokeWidth={2}
+                              fill="url(#baselineFill)"
+                              dot={false}
+                              activeDot={false}
+                            />
+                            <Area
+                              type="monotone"
+                              dataKey="momentum"
+                              stroke="hsl(var(--primary))"
+                              strokeWidth={3}
+                              fill="url(#momentumFill)"
+                              dot={{
+                                r: 3,
+                                fill: "hsl(var(--primary))",
+                                strokeWidth: 0,
+                              }}
+                              activeDot={{ r: 5 }}
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="rounded-xl border border-border/60 bg-background/80 p-4">

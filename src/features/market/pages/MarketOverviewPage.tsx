@@ -59,7 +59,7 @@ export function MarketOverviewPage() {
       </section>
 
       {/* Search Bar */}
-      <div className="sticky top-0 z-20 bg-background/95 pb-4">
+      <div className="sticky top-0 z-20 bg-background pb-4">
         <StockSearchInput onSelect={handleSymbolSelect} />
       </div>
 

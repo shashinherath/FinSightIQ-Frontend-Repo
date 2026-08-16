@@ -13,6 +13,7 @@ export function ForexSearchInput({
   placeholder?: string;
 }) {
   const [query, setQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { data: popularPairs = [] } = useForexPairs();
@@ -42,6 +43,7 @@ export function ForexSearchInput({
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (!containerRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
         setActiveIndex(0);
       }
     };
@@ -53,6 +55,8 @@ export function ForexSearchInput({
   const handleSelect = (result: ForexSearchResult) => {
     onSelect?.(result.symbol);
     setQuery(result.symbol);
+    setIsOpen(false);
+    setActiveIndex(0);
   };
 
   return (
@@ -64,15 +68,27 @@ export function ForexSearchInput({
           onChange={(event) => {
             setQuery(event.target.value);
             setActiveIndex(0);
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+          onBlur={() => {
+            requestAnimationFrame(() => {
+              if (!containerRef.current?.contains(document.activeElement)) {
+                setIsOpen(false);
+                setActiveIndex(0);
+              }
+            });
           }}
           onKeyDown={(event) => {
             if (suggestions.length === 0) return;
             if (event.key === "ArrowDown") {
               event.preventDefault();
+              setIsOpen(true);
               setActiveIndex((index) => (index + 1) % suggestions.length);
             }
             if (event.key === "ArrowUp") {
               event.preventDefault();
+              setIsOpen(true);
               setActiveIndex((index) =>
                 index === 0 ? suggestions.length - 1 : index - 1,
               );
@@ -81,23 +97,29 @@ export function ForexSearchInput({
               event.preventDefault();
               handleSelect(suggestions[activeIndex]);
             }
+            if (event.key === "Escape") {
+              setIsOpen(false);
+              setActiveIndex(0);
+            }
           }}
           placeholder={placeholder}
-          className="h-12 rounded-xl border-border/60 pl-10"
+          className="h-12 rounded-xl border-border/30 bg-background pl-10 shadow-none focus-visible:ring-1 focus-visible:ring-primary/25 focus-visible:ring-offset-0"
           aria-label="Search currency pairs"
           role="combobox"
-          aria-expanded={suggestions.length > 0}
+          aria-expanded={isOpen && suggestions.length > 0}
           aria-controls="forex-search-results"
         />
       </div>
 
-      <div id="forex-search-results" role="listbox">
-        <ForexSearchDropdown
-          results={suggestions}
-          activeIndex={activeIndex}
-          onSelect={handleSelect}
-        />
-      </div>
+      {isOpen && suggestions.length > 0 && (
+        <div id="forex-search-results" role="listbox">
+          <ForexSearchDropdown
+            results={suggestions}
+            activeIndex={activeIndex}
+            onSelect={handleSelect}
+          />
+        </div>
+      )}
     </div>
   );
 }

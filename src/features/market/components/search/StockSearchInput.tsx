@@ -128,100 +128,108 @@ export function StockSearchInput({
       {isOpen && (displayResults.length > 0 || displaySuggestions) && (
         <div
           className={cn(
-            "absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg",
-            "shadow-xl ring-1 ring-border/60 backdrop-blur-none z-[90] max-h-96 overflow-y-auto",
+            "absolute top-full left-0 right-0 mt-2 rounded-lg border border-border",
+            "relative bg-card text-card-foreground shadow-2xl ring-1 ring-border/60 backdrop-blur-none",
+            "z-[90] max-h-96 overflow-y-auto overflow-hidden",
           )}
+          style={{ backgroundColor: "hsl(var(--card))", opacity: 1 }}
         >
-          {/* Search Results */}
-          {displayResults.length > 0 && (
-            <div>
-              <div className="px-4 py-2 border-b border-border">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Results
-                </p>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-lg bg-card"
+          />
+          <div className="relative">
+            {/* Search Results */}
+            {displayResults.length > 0 && (
+              <div>
+                <div className="px-4 py-2 border-b border-border">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Results
+                  </p>
+                </div>
+                {displayResults.map((result) => (
+                  <button
+                    key={result.symbol}
+                    onClick={() => handleSelectSymbol(result.symbol)}
+                    className={cn(
+                      "w-full px-4 py-3 text-left bg-card",
+                      "hover:bg-muted transition-colors duration-150",
+                      "border-b border-border/50 last:border-b-0",
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-foreground">
+                          {result.symbol}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {result.name}
+                        </p>
+                      </div>
+                      <span className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground">
+                        {result.exchange}
+                      </span>
+                    </div>
+                  </button>
+                ))}
               </div>
-              {displayResults.map((result) => (
-                <button
-                  key={result.symbol}
-                  onClick={() => handleSelectSymbol(result.symbol)}
-                  className={cn(
-                    "w-full px-4 py-3 text-left",
-                    "hover:bg-muted transition-colors duration-150",
-                    "border-b border-border/50 last:border-b-0",
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-foreground">
-                        {result.symbol}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {result.name}
+            )}
+
+            {/* Suggestions */}
+            {displaySuggestions && (
+              <div>
+                {/* Recent Searches */}
+                {displaySuggestions.recent.length > 0 && (
+                  <div>
+                    <div className="px-4 py-2 border-b border-border">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        Recent
                       </p>
                     </div>
-                    <span className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground">
-                      {result.exchange}
-                    </span>
+                    {displaySuggestions.recent.map((symbol) => (
+                      <button
+                        key={symbol}
+                        onClick={() => handleSelectSymbol(symbol)}
+                        className={cn(
+                          "w-full px-4 py-3 text-left text-foreground bg-card",
+                          "hover:bg-muted transition-colors duration-150",
+                          "border-b border-border/50 last:border-b-0",
+                        )}
+                      >
+                        {symbol}
+                      </button>
+                    ))}
                   </div>
-                </button>
-              ))}
-            </div>
-          )}
+                )}
 
-          {/* Suggestions */}
-          {displaySuggestions && (
-            <div>
-              {/* Recent Searches */}
-              {displaySuggestions.recent.length > 0 && (
-                <div>
-                  <div className="px-4 py-2 border-b border-border">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      Recent
-                    </p>
+                {/* Trending Searches */}
+                {displaySuggestions.trending.length > 0 && (
+                  <div>
+                    <div className="px-4 py-2 border-b border-border">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4" />
+                        Trending
+                      </p>
+                    </div>
+                    {displaySuggestions.trending.map((symbol) => (
+                      <button
+                        key={symbol}
+                        onClick={() => handleSelectSymbol(symbol)}
+                        className={cn(
+                          "w-full px-4 py-3 text-left text-foreground bg-card",
+                          "hover:bg-muted transition-colors duration-150",
+                          "border-b border-border/50 last:border-b-0",
+                        )}
+                      >
+                        {symbol}
+                      </button>
+                    ))}
                   </div>
-                  {displaySuggestions.recent.map((symbol) => (
-                    <button
-                      key={symbol}
-                      onClick={() => handleSelectSymbol(symbol)}
-                      className={cn(
-                        "w-full px-4 py-3 text-left text-foreground",
-                        "hover:bg-muted transition-colors duration-150",
-                        "border-b border-border/50 last:border-b-0",
-                      )}
-                    >
-                      {symbol}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Trending Searches */}
-              {displaySuggestions.trending.length > 0 && (
-                <div>
-                  <div className="px-4 py-2 border-b border-border">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4" />
-                      Trending
-                    </p>
-                  </div>
-                  {displaySuggestions.trending.map((symbol) => (
-                    <button
-                      key={symbol}
-                      onClick={() => handleSelectSymbol(symbol)}
-                      className={cn(
-                        "w-full px-4 py-3 text-left text-foreground",
-                        "hover:bg-muted transition-colors duration-150",
-                        "border-b border-border/50 last:border-b-0",
-                      )}
-                    >
-                      {symbol}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
