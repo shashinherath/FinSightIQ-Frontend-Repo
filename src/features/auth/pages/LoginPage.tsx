@@ -43,26 +43,26 @@ export function LoginPage() {
 
   return (
     <AuthCard
-      title="Welcome back"
-      description="Sign in to access your real-time portfolio and AI insights."
+      title="Sign in"
+      description="Sign in to access your real-time portfolio."
       footer={
         <p className="text-center text-sm text-muted-foreground">
-          New to FinSightIQ?{" "}
+          No account yet?{" "}
           <Link to="/register" className="font-medium text-primary">
-            Create an account
+            Create one
           </Link>
         </p>
       }
     >
       {error && <AuthAlert message={error} />}
 
-      <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-2">
-          <Label htmlFor="email">Email address</Label>
+          <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             type="email"
-            placeholder="you@company.com"
+            placeholder="analyst@firm.com"
             autoComplete="email"
             className={cn(errors.email && "border-destructive")}
             aria-invalid={Boolean(errors.email?.message)}
@@ -77,11 +77,19 @@ export function LoginPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <div className="flex items-baseline justify-between gap-3">
+            <Label htmlFor="password">Password</Label>
+            <Link
+              to="/forgot-password"
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              Forgot password
+            </Link>
+          </div>
           <PasswordInput
             id="password"
             autoComplete="current-password"
-            placeholder="Enter your password"
+            placeholder="Your password"
             hasError={Boolean(errors.password?.message)}
             aria-invalid={Boolean(errors.password?.message)}
             aria-describedby={
@@ -96,26 +104,19 @@ export function LoginPage() {
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <Controller
-            name="remember"
-            control={control}
-            render={({ field }) => (
-              <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={(checked) =>
-                    field.onChange(checked === true)
-                  }
-                />
-                Remember me
-              </label>
-            )}
-          />
-          <Button asChild type="button" variant="link" className="px-0 text-sm">
-            <Link to="/forgot-password">Forgot password?</Link>
-          </Button>
-        </div>
+        <Controller
+          name="remember"
+          control={control}
+          render={({ field }) => (
+            <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm">
+              <Checkbox
+                checked={field.value}
+                onCheckedChange={(checked) => field.onChange(checked === true)}
+              />
+              Keep me signed in on this device
+            </label>
+          )}
+        />
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}

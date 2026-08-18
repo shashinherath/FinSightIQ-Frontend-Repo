@@ -1,46 +1,37 @@
 import { Outlet } from "react-router-dom";
-import { Activity, TrendingUp } from "lucide-react";
-import { Badge } from "@/shared/ui/badge";
+import { Sparkles } from "lucide-react";
+import { ThemeToggle } from "@/shared/components/ThemeToggle";
 
 export function AuthLayout() {
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_hsl(var(--muted))_0%,_transparent_45%)] text-foreground transition-colors duration-300">
-      <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
-        <div className="hidden flex-col justify-between border-r border-border/60 bg-muted/20 px-12 py-10 lg:flex">
-          <div className="flex items-center gap-3">
-            <Activity className="h-6 w-6 text-primary" />
-            <span className="text-lg font-semibold tracking-tight">
-              FinSight<span className="text-primary">IQ</span>
-            </span>
-          </div>
+    <div className="relative flex min-h-screen items-start justify-center overflow-y-auto bg-[radial-gradient(circle_at_top,_hsl(var(--muted))_0%,_transparent_48%)] px-4 py-12 text-foreground">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-[90px] left-[14%] h-80 w-80 rounded-full bg-primary/25 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-[70px] right-[10%] h-72 w-72 rounded-full bg-chart-4/25 blur-3xl"
+      />
 
-          <div className="space-y-6">
-            <Badge variant="secondary" className="w-fit">
-              AI stock intelligence
-            </Badge>
-            <h1 className="text-4xl font-semibold leading-tight">
-              Make faster, smarter trading decisions with live AI insights.
-            </h1>
-            <p className="text-base text-muted-foreground">
-              Monitor real-time markets, forecast price movements, and optimize
-              your portfolio with confidence.
-            </p>
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <TrendingUp className="h-4 w-4 text-primary" />
-              Live predictions updated every minute.
-            </div>
-          </div>
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
 
-          <p className="text-xs text-muted-foreground">
-            Trusted by quantitative teams and fintech innovators.
-          </p>
+      <div className="relative flex w-full max-w-md flex-col gap-6">
+        <div className="flex flex-col items-center gap-3.5">
+          <span
+            aria-hidden="true"
+            className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary"
+          >
+            <Sparkles className="h-[30px] w-[30px] text-primary-foreground" />
+          </span>
+          <span className="font-display text-[22px] font-bold tracking-tight">
+            FinSight<span className="text-muted-foreground">IQ</span>
+          </span>
         </div>
 
-        <div className="flex items-center justify-center px-6 py-12">
-          <div className="w-full max-w-md">
-            <Outlet />
-          </div>
-        </div>
+        <Outlet />
       </div>
     </div>
   );

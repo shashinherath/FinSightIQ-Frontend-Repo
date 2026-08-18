@@ -49,10 +49,10 @@ export function RegisterPage() {
   return (
     <AuthCard
       title="Create your account"
-      description="Start tracking market opportunities with AI-driven insights."
+      description="New accounts start with Viewer access. An administrator grants Analyst rights."
       footer={
         <p className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
+          Already registered?{" "}
           <Link to="/login" className="font-medium text-primary">
             Sign in
           </Link>
@@ -61,12 +61,12 @@ export function RegisterPage() {
     >
       {error && <AuthAlert message={error} />}
 
-      <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-2">
           <Label htmlFor="fullName">Full name</Label>
           <Input
             id="fullName"
-            placeholder="Alex Morgan"
+            placeholder="Rachel Osei"
             autoComplete="name"
             className={cn(errors.fullName && "border-destructive")}
             aria-invalid={Boolean(errors.fullName?.message)}
@@ -87,7 +87,7 @@ export function RegisterPage() {
           <Input
             id="email"
             type="email"
-            placeholder="you@company.com"
+            placeholder="analyst@firm.com"
             autoComplete="email"
             className={cn(errors.email && "border-destructive")}
             aria-invalid={Boolean(errors.email?.message)}
@@ -105,7 +105,7 @@ export function RegisterPage() {
           <Label htmlFor="password">Password</Label>
           <PasswordInput
             id="password"
-            placeholder="Create a strong password"
+            placeholder="At least 12 characters"
             autoComplete="new-password"
             hasError={Boolean(errors.password?.message)}
             aria-invalid={Boolean(errors.password?.message)}
@@ -149,23 +149,16 @@ export function RegisterPage() {
           control={control}
           render={({ field }) => (
             <div className="space-y-2">
-              <label className="flex items-start gap-3 text-sm text-muted-foreground">
+              <label className="flex min-h-11 cursor-pointer items-start gap-2.5 text-[13px] leading-relaxed">
                 <Checkbox
                   checked={field.value}
                   onCheckedChange={(checked) =>
                     field.onChange(checked === true)
                   }
                 />
-                <span>
-                  I agree to the{" "}
-                  <Link to="/terms" className="font-medium text-primary">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link to="/privacy" className="font-medium text-primary">
-                    Privacy Policy
-                  </Link>
-                  .
+                <span className="text-muted-foreground">
+                  I understand FinSightIQ produces model output, not financial
+                  advice, and does not execute trades.
                 </span>
               </label>
               {errors.terms?.message && (
