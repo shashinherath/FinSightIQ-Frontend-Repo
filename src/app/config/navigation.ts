@@ -1,12 +1,11 @@
 import {
   LayoutDashboard,
   LineChart,
-  ArrowUpDown,
-  TrendingUp,
+  Brain,
   Briefcase,
-  MessageSquare,
   Bell,
   Settings,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -14,6 +13,8 @@ export interface NavItem {
   name: string;
   href: string;
   icon: LucideIcon;
+  /** Only render this item for these roles. Omit to show for everyone. */
+  roles?: Array<"Viewer" | "Analyst" | "Administrator">;
 }
 
 export const NAVIGATION_ITEMS: NavItem[] = [
@@ -23,19 +24,14 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    name: "Market",
+    name: "Markets",
     href: "/app/market",
     icon: LineChart,
   },
   {
-    name: "Forex",
-    href: "/app/forex",
-    icon: ArrowUpDown,
-  },
-  {
     name: "Predictions",
     href: "/app/predictions",
-    icon: TrendingUp,
+    icon: Brain,
   },
   {
     name: "Portfolio",
@@ -43,18 +39,22 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     icon: Briefcase,
   },
   {
-    name: "Sentiment",
-    href: "/app/sentiment",
-    icon: MessageSquare,
-  },
-  {
     name: "Alerts",
     href: "/app/alerts",
     icon: Bell,
   },
+];
+
+export const NAVIGATION_FOOTER_ITEMS: NavItem[] = [
   {
     name: "Settings",
     href: "/app/settings",
     icon: Settings,
+  },
+  {
+    name: "Admin",
+    href: "/app/admin",
+    icon: ShieldCheck,
+    roles: ["Administrator"],
   },
 ];

@@ -25,6 +25,13 @@ const RegisterPage = withSuspense(
     })),
   ),
 );
+const ForgotPasswordPage = withSuspense(
+  lazy(() =>
+    import("@/features/auth/pages/ForgotPasswordPage").then((module) => ({
+      default: module.ForgotPasswordPage,
+    })),
+  ),
+);
 const DashboardPage = withSuspense(
   lazy(() =>
     import("@/features/dashboard/pages/DashboardPage").then((module) => ({
@@ -50,27 +57,6 @@ const MarketSearchPage = withSuspense(
   lazy(() =>
     import("@/features/market/pages").then((module) => ({
       default: module.MarketSearchPage,
-    })),
-  ),
-);
-const ForexDashboardPage = withSuspense(
-  lazy(() =>
-    import("@/features/forex/pages").then((module) => ({
-      default: module.ForexDashboardPage,
-    })),
-  ),
-);
-const ForexSearchPage = withSuspense(
-  lazy(() =>
-    import("@/features/forex/pages").then((module) => ({
-      default: module.ForexSearchPage,
-    })),
-  ),
-);
-const ForexPairDetailsPage = withSuspense(
-  lazy(() =>
-    import("@/features/forex/pages").then((module) => ({
-      default: module.ForexPairDetailsPage,
     })),
   ),
 );
@@ -102,17 +88,24 @@ const PredictionDetailsPage = withSuspense(
     })),
   ),
 );
-const PortfolioPage = withSuspense(
+const PortfolioListPage = withSuspense(
   lazy(() =>
-    import("@/features/portfolio/pages/PortfolioPage").then((module) => ({
-      default: module.PortfolioPage,
+    import("@/features/portfolio/pages").then((module) => ({
+      default: module.PortfolioListPage,
     })),
   ),
 );
-const SentimentPage = withSuspense(
+const PortfolioDetailPage = withSuspense(
   lazy(() =>
-    import("@/features/sentiment/pages/SentimentPage").then((module) => ({
-      default: module.SentimentPage,
+    import("@/features/portfolio/pages").then((module) => ({
+      default: module.PortfolioDetailPage,
+    })),
+  ),
+);
+const HoldingDetailPage = withSuspense(
+  lazy(() =>
+    import("@/features/portfolio/pages").then((module) => ({
+      default: module.HoldingDetailPage,
     })),
   ),
 );
@@ -127,6 +120,13 @@ const SettingsPage = withSuspense(
   lazy(() =>
     import("@/features/settings/pages/SettingsPage").then((module) => ({
       default: module.SettingsPage,
+    })),
+  ),
+);
+const AdminPage = withSuspense(
+  lazy(() =>
+    import("@/features/admin/pages/AdminPage").then((module) => ({
+      default: module.AdminPage,
     })),
   ),
 );
@@ -166,23 +166,6 @@ export const router = createBrowserRouter([
         ],
       },
       {
-        path: "forex",
-        children: [
-          {
-            index: true,
-            element: <ForexDashboardPage />,
-          },
-          {
-            path: "search",
-            element: <ForexSearchPage />,
-          },
-          {
-            path: "pair/:pair",
-            element: <ForexPairDetailsPage />,
-          },
-        ],
-      },
-      {
         path: "predictions",
         children: [
           {
@@ -205,11 +188,20 @@ export const router = createBrowserRouter([
       },
       {
         path: "portfolio",
-        element: <PortfolioPage />,
-      },
-      {
-        path: "sentiment",
-        element: <SentimentPage />,
+        children: [
+          {
+            index: true,
+            element: <PortfolioListPage />,
+          },
+          {
+            path: ":portfolioId",
+            element: <PortfolioDetailPage />,
+          },
+          {
+            path: ":portfolioId/holdings/:symbol",
+            element: <HoldingDetailPage />,
+          },
+        ],
       },
       {
         path: "alerts",
@@ -219,6 +211,10 @@ export const router = createBrowserRouter([
         path: "settings",
         element: <SettingsPage />,
       },
+      {
+        path: "admin",
+        element: <AdminPage />,
+      },
     ],
   },
   {
@@ -227,6 +223,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "login", element: <LoginPage /> },
       { path: "register", element: <RegisterPage /> },
+      { path: "forgot-password", element: <ForgotPasswordPage /> },
     ],
   },
   {

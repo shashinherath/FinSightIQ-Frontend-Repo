@@ -7,7 +7,6 @@ import { Label } from "@/shared/ui/label";
 import { ModelSelector } from "@/features/predictions/components/ModelSelector";
 import { ForecastHorizonSelector } from "@/features/predictions/components/ForecastHorizonSelector";
 import { PredictionSubmitButton } from "@/features/predictions/components/PredictionSubmitButton";
-import type { AssetType } from "@/app/store/assetStore";
 import type {
   ConfidencePreference,
   ForecastHorizon,
@@ -27,14 +26,12 @@ interface PredictionFormProps {
   defaultValues?: PredictionFormValues;
   onSubmit: (values: PredictionFormValues) => Promise<void> | void;
   isSubmitting?: boolean;
-  assetType?: AssetType;
 }
 
 export function PredictionForm({
   defaultValues,
   onSubmit,
   isSubmitting,
-  assetType = "stock",
 }: PredictionFormProps) {
   const form = useForm<PredictionFormValues>({
     resolver: zodResolver(schema),
@@ -60,14 +57,8 @@ export function PredictionForm({
       })}
     >
       <div className="grid gap-2">
-        <Label htmlFor="symbol">
-          {assetType === "forex" ? "Currency Pair" : "Symbol"}
-        </Label>
-        <Input
-          id="symbol"
-          {...form.register("symbol")}
-          placeholder={assetType === "forex" ? "EUR/USD" : "AAPL"}
-        />
+        <Label htmlFor="symbol">Symbol</Label>
+        <Input id="symbol" {...form.register("symbol")} placeholder="AAPL" />
       </div>
 
       <ModelSelector

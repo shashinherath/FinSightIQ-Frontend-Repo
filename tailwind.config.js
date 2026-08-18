@@ -6,6 +6,10 @@ export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        display: "var(--font-display)",
+        body: "var(--font-body)",
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -52,6 +56,21 @@ export default {
           4: "hsl(var(--chart-4))",
           5: "hsl(var(--chart-5))",
         },
+        // Market semantics — gains, losses, neutral/hold, FX, and the live indicator.
+        up: {
+          DEFAULT: "#10b981",
+          strong: "#34d399",
+        },
+        down: "hsl(var(--destructive))",
+        hold: {
+          DEFAULT: "#f59e0b",
+          strong: "#fbbf24",
+        },
+        fx: {
+          DEFAULT: "#3b82f6",
+          soft: "#60a5fa",
+        },
+        live: "#ef4444",
       },
     },
   },

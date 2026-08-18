@@ -13,12 +13,11 @@ import { Skeleton } from "@/shared/ui/skeleton";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { DashboardCard } from "@/features/dashboard/components/DashboardCard";
 import { OverviewStatCard } from "@/features/dashboard/components/OverviewStatCard";
-import { useAssetType } from "@/app/hooks/useAssetType";
 import { cn } from "@/shared/utils/cn";
 
 export function DashboardPage() {
   const isLoading = false;
-  const { isForex } = useAssetType();
+  const isForex = false;
 
   const overviewCards = isForex
     ? [

@@ -6,7 +6,6 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { FeaturePageShell } from "@/shared/components/FeaturePageShell";
-import { AssetToggle } from "@/shared/components/AssetToggle";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { PredictionForm } from "@/features/predictions/components/PredictionForm";
 import {
@@ -39,7 +38,6 @@ import {
 } from "@/features/predictions/query/prediction.query";
 import { usePredictionStore } from "@/features/predictions/store/predictionStore";
 import { usePredictionSignalR } from "@/features/predictions/services/usePredictionSignalR";
-import { useAssetType } from "@/app/hooks/useAssetType";
 import type {
   ForecastHorizon,
   PredictionModel,
@@ -59,7 +57,7 @@ const MultiModelChart = lazy(() =>
 export function PredictionsDashboardPage() {
   usePredictionSignalR();
   const navigate = useNavigate();
-  const { assetType, isForex } = useAssetType();
+  const isForex = false;
 
   const sectionMotion = {
     initial: { opacity: 0, y: 16 },
@@ -139,7 +137,6 @@ export function PredictionsDashboardPage() {
       }
       action={
         <div className="flex flex-wrap items-center gap-2">
-          <AssetToggle className="sm:hidden" />
           <Button
             variant="outline"
             onClick={() => navigate("/app/predictions/history")}
@@ -221,10 +218,9 @@ export function PredictionsDashboardPage() {
       >
         <div className="space-y-6">
           <PredictionForm
-            assetType={assetType}
             isSubmitting={isGenerating}
             defaultValues={{
-              symbol: selectedSymbol || (isForex ? "EUR/USD" : "AAPL"),
+              symbol: selectedSymbol || "AAPL",
               model: selectedModel,
               horizon: selectedHorizon,
               confidencePreference,

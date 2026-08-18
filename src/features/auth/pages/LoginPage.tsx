@@ -2,7 +2,6 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
 import { LoaderCircle } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
@@ -113,17 +112,8 @@ export function LoginPage() {
               </label>
             )}
           />
-          <Button
-            type="button"
-            variant="link"
-            className="px-0 text-sm"
-            onClick={() =>
-              toast("Password recovery", {
-                description: "Reset flows will be available in the next phase.",
-              })
-            }
-          >
-            Forgot password?
+          <Button asChild type="button" variant="link" className="px-0 text-sm">
+            <Link to="/forgot-password">Forgot password?</Link>
           </Button>
         </div>
 

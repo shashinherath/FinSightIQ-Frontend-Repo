@@ -1,5 +1,9 @@
 import { create } from "zustand";
-import type { AuthStatus, AuthUser } from "@/features/auth/types/auth";
+import type {
+  AuthStatus,
+  AuthUser,
+  UserRole,
+} from "@/features/auth/types/auth";
 import type {
   LoginFormValues,
   RegisterFormValues,
@@ -22,6 +26,7 @@ interface AuthState {
   register: (values: RegisterFormValues) => Promise<void>;
   logout: () => void;
   clearError: () => void;
+  setRole: (role: UserRole) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -40,6 +45,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         id: createUserId(),
         name: values.email.split("@")[0] ?? "User",
         email: values.email,
+        role: "Administrator",
       },
     });
   },
@@ -54,6 +60,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         id: createUserId(),
         name: values.fullName,
         email: values.email,
+        role: "Viewer",
       },
     });
   },
@@ -65,4 +72,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       error: null,
     }),
   clearError: () => set({ error: null }),
+  setRole: (role) =>
+    set((state) => (state.user ? { user: { ...state.user, role } } : state)),
 }));
