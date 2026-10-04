@@ -9,6 +9,7 @@ interface OverviewStatCardProps {
   value: string;
   change: string;
   trend: "up" | "down" | "flat";
+  note?: string;
   icon?: ReactNode;
 }
 
@@ -17,6 +18,7 @@ export function OverviewStatCard({
   value,
   change,
   trend,
+  note = "vs. yesterday",
   icon,
 }: OverviewStatCardProps) {
   const isPositive = trend === "up";
@@ -29,22 +31,24 @@ export function OverviewStatCard({
           <span>{label}</span>
           {icon}
         </div>
-        <div className="text-2xl font-semibold tracking-tight">{value}</div>
+        <div className="font-display text-2xl font-semibold tracking-tight">
+          {value}
+        </div>
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
             className={cn(
               "flex items-center gap-1 border border-border/60",
-              isPositive && "text-emerald-500",
-              isNegative && "text-destructive",
+              isPositive && "text-up-strong",
+              isNegative && "text-down",
+              !isPositive && !isNegative && "text-foreground",
             )}
           >
             {isPositive && <TrendingUp className="h-3.5 w-3.5" />}
             {isNegative && <TrendingDown className="h-3.5 w-3.5" />}
-            {!isPositive && !isNegative && <span className="h-3.5 w-3.5" />}
             {change}
           </Badge>
-          <span className="text-xs text-muted-foreground">vs. yesterday</span>
+          <span className="text-xs text-muted-foreground">{note}</span>
         </div>
       </CardContent>
     </Card>

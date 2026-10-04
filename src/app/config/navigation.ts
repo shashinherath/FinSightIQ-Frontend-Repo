@@ -1,8 +1,8 @@
 import {
   LayoutDashboard,
   LineChart,
-  Brain,
   Briefcase,
+  TrendingUp,
   Bell,
   Settings,
   ShieldCheck,
@@ -22,26 +22,31 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     name: "Dashboard",
     href: "/app/dashboard",
     icon: LayoutDashboard,
+    roles: ["Viewer", "Analyst", "Administrator"],
   },
   {
     name: "Markets",
     href: "/app/market",
     icon: LineChart,
+    roles: ["Viewer", "Analyst", "Administrator"],
+  },
+  {
+    name: "Portfolios",
+    href: "/app/portfolio",
+    icon: Briefcase,
+    roles: ["Analyst", "Administrator"],
   },
   {
     name: "Predictions",
     href: "/app/predictions",
-    icon: Brain,
-  },
-  {
-    name: "Portfolio",
-    href: "/app/portfolio",
-    icon: Briefcase,
+    icon: TrendingUp,
+    roles: ["Analyst", "Administrator"],
   },
   {
     name: "Alerts",
     href: "/app/alerts",
     icon: Bell,
+    roles: ["Analyst", "Administrator"],
   },
 ];
 
@@ -50,6 +55,7 @@ export const NAVIGATION_FOOTER_ITEMS: NavItem[] = [
     name: "Settings",
     href: "/app/settings",
     icon: Settings,
+    roles: ["Viewer", "Analyst", "Administrator"],
   },
   {
     name: "Admin",

@@ -17,10 +17,12 @@ export function FeaturePageShell({
   className,
 }: FeaturePageShellProps) {
   return (
-    <div className={cn("space-y-6", className)}>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+    <div className={cn("flex flex-col gap-5", className)}>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="font-display text-3xl font-semibold tracking-tight">
+            {title}
+          </h1>
           <p className="text-sm text-muted-foreground">{description}</p>
         </div>
         {action}

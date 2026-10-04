@@ -14,6 +14,8 @@ export interface AlertRule {
   threshold?: number;
   symbol?: string;
   createdAt: number;
+  /** Display metadata shown below the rule name, e.g. "Email · created 2 August" */
+  meta?: string;
 }
 
 export interface NotificationItem {

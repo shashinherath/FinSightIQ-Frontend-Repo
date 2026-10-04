@@ -1,14 +1,6 @@
 import { useState } from "react";
-import {
-  Bell,
-  BellOff,
-  Info,
-  MoreVertical,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import { BellOff, Info, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import { Badge } from "@/shared/ui/badge";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import {
@@ -25,10 +17,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { FeaturePageShell } from "@/shared/components/FeaturePageShell";
-import { useNotifications } from "../query/alerts.query";
+import { cn } from "@/shared/utils/cn";
 import { useAlertsStore } from "../store/alertsStore";
 import type { AlertRule, AlertType } from "../types/alerts.types";
 
@@ -105,12 +96,42 @@ function formatType(type: AlertType) {
 function formatThreshold(rule: AlertRule) {
   if (rule.threshold === undefined) return "—";
   if (rule.type === "SENTIMENT_SHIFT") return rule.threshold.toFixed(2);
-  if (rule.type === "PERCENT_MOVE") return `${rule.threshold}%`;
+  if (rule.type === "PERCENT_MOVE") return `${rule.threshold.toFixed(2)}%`;
+  if (rule.type === "PREDICTION_HIGH_CONFIDENCE") return `${rule.threshold}%`;
   return `$${rule.threshold.toFixed(2)}`;
 }
 
+/** Compact tab bar matching the prototype's Tabs component style. */
+function TabBar({
+  tabs,
+  active,
+  onChange,
+}: {
+  tabs: { value: string; label: string }[];
+  active: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex w-fit items-center gap-0 rounded-lg border border-border bg-card p-1">
+      {tabs.map((t) => (
+        <button
+          key={t.value}
+          onClick={() => onChange(t.value)}
+          className={cn(
+            "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
+            active === t.value
+              ? "bg-foreground text-background"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function AlertsPage() {
-  const { data: notifications } = useNotifications();
   const { rules, addRule, removeRule, toggleRule } = useAlertsStore();
 
   const [tab, setTab] = useState<"rules" | "history">("rules");
@@ -130,6 +151,11 @@ export function AlertsPage() {
   const handleCreateRule = () => {
     const label =
       METRIC_OPTIONS.find((m) => m.value === metric)?.label ?? metric;
+    const now = new Date();
+    const dateLabel = now.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+    });
     addRule({
       id: Date.now().toString(),
       name: `${symbol ? `${symbol.toUpperCase()} ` : ""}${label} ${condition}`,
@@ -138,6 +164,7 @@ export function AlertsPage() {
       threshold: threshold ? Number(threshold) : undefined,
       symbol: symbol ? symbol.toUpperCase() : undefined,
       createdAt: Date.now(),
+      meta: `Email · created ${dateLabel}`,
     } as AlertRule);
     setRuleOpen(false);
     resetForm();
@@ -149,12 +176,14 @@ export function AlertsPage() {
       description="Rules that watch your symbols and portfolios."
       action={<Button onClick={() => setRuleOpen(true)}>New rule</Button>}
     >
-      <Tabs value={tab} onValueChange={(v) => setTab(v as "rules" | "history")}>
-        <TabsList>
-          <TabsTrigger value="rules">Rules</TabsTrigger>
-          <TabsTrigger value="history">Delivery history</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <TabBar
+        tabs={[
+          { value: "rules", label: "Rules" },
+          { value: "history", label: "Delivery history" },
+        ]}
+        active={tab}
+        onChange={(v) => setTab(v as "rules" | "history")}
+      />
 
       {tab === "rules" && (
         <div className="flex flex-col gap-4">
@@ -170,7 +199,7 @@ export function AlertsPage() {
               }
             />
           ) : (
-            <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm">
               <div
                 role="table"
                 aria-label="Alert rules"
@@ -179,7 +208,7 @@ export function AlertsPage() {
                 <div className="min-w-[700px]">
                   <div
                     role="row"
-                    className="grid h-12 grid-cols-[1.6fr_140px_120px_56px] items-center gap-x-4 border-b px-4 text-xs font-medium text-muted-foreground"
+                    className="grid h-12 grid-cols-[1.6fr_140px_120px_56px] items-center gap-x-4 border-b border-border px-4 text-xs font-medium text-muted-foreground"
                   >
                     <div role="columnheader">Rule</div>
                     <div role="columnheader" className="text-right">
@@ -192,13 +221,14 @@ export function AlertsPage() {
                     <div
                       key={rule.id}
                       role="row"
-                      className="grid grid-cols-[1.6fr_140px_120px_56px] items-center gap-x-4 border-b px-4 py-3.5 transition-colors last:border-b-0 hover:bg-muted/50"
+                      className="grid grid-cols-[1.6fr_140px_120px_56px] items-center gap-x-4 border-b border-border px-4 py-3.5 transition-colors last:border-b-0 hover:bg-muted/50"
                     >
                       <div role="cell" className="flex flex-col gap-0.5">
                         <span className="text-sm font-medium">{rule.name}</span>
                         <span className="text-[11px] text-muted-foreground">
-                          {formatType(rule.type)}
-                          {rule.symbol ? ` · ${rule.symbol}` : ""}
+                          {rule.meta ||
+                            formatType(rule.type) +
+                              (rule.symbol ? ` · ${rule.symbol}` : "")}
                         </span>
                       </div>
                       <div
@@ -212,7 +242,7 @@ export function AlertsPage() {
                           type="button"
                           aria-pressed={rule.enabled}
                           onClick={() => toggleRule(rule.id)}
-                          className="inline-flex min-h-9 items-center gap-2 rounded-full border px-2.5 hover:bg-accent"
+                          className="inline-flex min-h-9 items-center gap-2 rounded-full border border-border px-2.5 hover:bg-accent"
                         >
                           <span
                             aria-hidden="true"
@@ -221,7 +251,7 @@ export function AlertsPage() {
                             }`}
                           />
                           <span className="text-[13px]">
-                            {rule.enabled ? "Active" : "Paused"}
+                            {rule.enabled ? "On" : "Off"}
                           </span>
                         </button>
                       </div>
@@ -259,7 +289,7 @@ export function AlertsPage() {
               </div>
             </div>
           )}
-          <div className="flex items-start gap-2.5 rounded-lg border bg-muted/30 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+          <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/30 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
             <Info className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <span>A triggered rule sends at most one email per hour.</span>
           </div>
@@ -268,8 +298,8 @@ export function AlertsPage() {
 
       {tab === "history" && (
         <div className="flex flex-col gap-4">
-          <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-muted/30 px-4 py-3">
+          <div className="overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-muted/30 px-4 py-3">
               <div>
                 <h2 className="text-base font-semibold">Delivery history</h2>
                 <p className="text-xs text-muted-foreground">Last 30 days</p>
@@ -287,7 +317,7 @@ export function AlertsPage() {
               <div className="min-w-[820px]">
                 <div
                   role="row"
-                  className="grid h-12 grid-cols-[150px_1.5fr_120px_1.2fr] items-center gap-x-4 border-b px-4 text-xs font-medium text-muted-foreground"
+                  className="grid h-12 grid-cols-[150px_1.5fr_120px_1.2fr] items-center gap-x-4 border-b border-border px-4 text-xs font-medium text-muted-foreground"
                 >
                   <div role="columnheader">Triggered</div>
                   <div role="columnheader">Rule</div>
@@ -300,7 +330,7 @@ export function AlertsPage() {
                   <div
                     key={entry.id}
                     role="row"
-                    className="grid grid-cols-[150px_1.5fr_120px_1.2fr] items-center gap-x-4 border-b px-4 py-3.5 transition-colors last:border-b-0 hover:bg-muted/50"
+                    className="grid grid-cols-[150px_1.5fr_120px_1.2fr] items-center gap-x-4 border-b border-border px-4 py-3.5 transition-colors last:border-b-0 hover:bg-muted/50"
                   >
                     <div
                       role="cell"
@@ -328,14 +358,16 @@ export function AlertsPage() {
                             : "bg-muted-foreground"
                         }`}
                       />
-                      <Badge
-                        variant={
-                          entry.status === "Delivered" ? "default" : "secondary"
-                        }
-                        className="text-[13px] font-normal"
+                      <span
+                        className={cn(
+                          "text-[13px]",
+                          entry.status === "Delivered"
+                            ? "text-foreground"
+                            : "text-muted-foreground",
+                        )}
                       >
                         {entry.status}
-                      </Badge>
+                      </span>
                       <span className="text-[11px] text-muted-foreground">
                         {entry.note}
                       </span>
@@ -350,23 +382,6 @@ export function AlertsPage() {
             delivers rarely usually has a threshold set too close to the current
             price.
           </p>
-        </div>
-      )}
-
-      {notifications && notifications.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <h3 className="flex items-center gap-2 text-sm font-medium">
-            <Bell className="h-4 w-4" />
-            Notifications
-          </h3>
-          <div className="flex flex-col gap-2">
-            {notifications.map((n) => (
-              <div key={n.id} className="rounded-md border p-3">
-                <div className="text-sm font-medium">{n.title}</div>
-                <div className="text-xs text-muted-foreground">{n.body}</div>
-              </div>
-            ))}
-          </div>
         </div>
       )}
 

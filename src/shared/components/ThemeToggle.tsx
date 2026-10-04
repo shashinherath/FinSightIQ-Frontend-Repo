@@ -1,52 +1,43 @@
-import { Check, Laptop, Moon, Sun } from "lucide-react";
+import React from "react";
+import { Moon, Sun } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/shared/ui/dropdown-menu";
-import { useThemeStore, type ThemePreference } from "@/app/store/themeStore";
+import { useThemeStore } from "@/app/store/themeStore";
+import { cn, toggleThemeWithAnimation } from "@/shared/utils";
 
-const themeOptions: Array<{
-  value: ThemePreference;
-  label: string;
-  icon: typeof Sun;
-}> = [
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
-  { value: "system", label: "System", icon: Laptop },
-];
+export interface ThemeToggleProps {
+  className?: string;
+  style?: React.CSSProperties;
+  onClick?: (ev: React.MouseEvent<HTMLButtonElement>) => void;
+}
 
-export function ThemeToggle() {
-  const { theme, resolvedTheme, setTheme } = useThemeStore();
-  const ActiveIcon = resolvedTheme === "dark" ? Moon : Sun;
+export function ThemeToggle({ className, style, onClick }: ThemeToggleProps) {
+  const { resolvedTheme } = useThemeStore();
+  const isDark = resolvedTheme === "dark";
+  const ActiveIcon = isDark ? Moon : Sun;
+
+  const handleClick = (ev: React.MouseEvent<HTMLButtonElement>) => {
+    if (onClick) {
+      onClick(ev);
+    } else {
+      toggleThemeWithAnimation(ev);
+    }
+  };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Toggle theme">
-          <ActiveIcon className="h-5 w-5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="w-40 border border-border bg-card shadow-xl ring-1 ring-border/60 backdrop-blur-none"
-      >
-        {themeOptions.map((option) => (
-          <DropdownMenuItem
-            key={option.value}
-            onClick={() => setTheme(option.value)}
-            className="flex items-center justify-between"
-          >
-            <span className="flex items-center gap-2">
-              <option.icon className="h-4 w-4" />
-              {option.label}
-            </span>
-            {theme === option.value && <Check className="h-4 w-4" />}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      data-theme-toggle="1"
+      aria-label="Toggle theme"
+      onClick={handleClick}
+      style={style}
+      className={cn(
+        "relative h-10 w-10 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors duration-150",
+        className,
+      )}
+    >
+      <ActiveIcon className="h-5 w-5" />
+    </Button>
   );
 }

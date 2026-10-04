@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   PanelLeftClose,
   PanelLeft,
@@ -15,53 +16,93 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { ThemeToggle } from "@/shared/components/ThemeToggle";
+import { GlobalSearchDialog } from "@/shared/components/GlobalSearchDialog";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import type { UserRole } from "@/features/auth/types/auth";
 
 const NOTIFICATIONS = [
   {
     id: "n1",
-    title: "NVDA prediction resolved",
-    body: "7-day forecast landed within the confidence band.",
-    when: "12m ago",
+    title: "NVDA above $180.00",
+    body: "Triggered at $182.44 · rule “NVDA breakout”",
+    when: "12 minutes ago",
     tone: "text-up",
+    route: "/app/alerts",
   },
   {
     id: "n2",
-    title: "Alert triggered: AAPL",
-    body: "Price crossed above your $232.00 threshold.",
-    when: "1h ago",
-    tone: "text-hold",
+    title: "Core growth drawdown 4.1%",
+    body: "Below the 4.0% threshold you set on 3 August.",
+    when: "1 hour ago",
+    tone: "text-down",
+    route: "/app/portfolio",
   },
   {
     id: "n3",
-    title: "Model retrained",
-    body: "Ensemble model v4.2 is now live for all symbols.",
-    when: "3h ago",
+    title: "ENSEMBLE forecast refreshed",
+    body: "7-day horizon rebuilt for 6 tracked symbols.",
+    when: "3 hours ago",
     tone: "text-foreground",
+    route: "/app/predictions",
   },
 ];
 
 export function TopNavbar() {
   const { isSidebarCollapsed, toggleSidebar } = useLayoutStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAuthStore((state) => state.user);
+  const setRole = useAuthStore((state) => state.setRole);
   const logout = useAuthStore((state) => state.logout);
 
-  const initials = (user?.name ?? "Guest User")
-    .split(" ")
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+  const currentRole = user?.role ?? "Analyst";
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName || "";
+      if (
+        e.key === "/" &&
+        tag !== "INPUT" &&
+        tag !== "TEXTAREA" &&
+        tag !== "SELECT" &&
+        !(e.target as HTMLElement)?.isContentEditable
+      ) {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextRole = e.target.value as UserRole;
+    setRole(nextRole);
+    if (nextRole === "Viewer") {
+      const blocked = [
+        "/app/portfolio",
+        "/app/predictions",
+        "/app/alerts",
+        "/app/admin",
+      ];
+      if (blocked.some((p) => location.pathname.startsWith(p))) {
+        navigate("/app/dashboard");
+      }
+    } else if (
+      nextRole === "Analyst" &&
+      location.pathname.startsWith("/app/admin")
+    ) {
+      navigate("/app/dashboard");
+    }
+  };
 
   return (
-    <header className="supports-[backdrop-filter]:bg-background/60 sticky top-0 z-30 flex w-full shrink-0 items-center justify-between gap-4 border-b bg-background/95 px-4 h-16 backdrop-blur md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 w-full shrink-0 items-center justify-between gap-4 border-b border-border bg-background/95 px-4 backdrop-blur md:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <MobileDrawer />
 
@@ -69,7 +110,7 @@ export function TopNavbar() {
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className="hidden text-muted-foreground hover:text-foreground md:flex"
+          className="hidden text-muted-foreground hover:bg-accent hover:text-foreground md:flex"
         >
           {isSidebarCollapsed ? (
             <PanelLeft className="h-5 w-5" />
@@ -81,22 +122,36 @@ export function TopNavbar() {
 
         <button
           type="button"
-          onClick={() => navigate("/app/market/search")}
-          aria-label="Search symbols"
-          className="flex h-10 max-w-[280px] flex-1 items-center gap-2 rounded-md border bg-muted/30 px-3 text-left text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
+          onClick={() => setSearchOpen(true)}
+          aria-label="Search symbols, portfolios and pages"
+          className="flex h-10 max-w-[280px] flex-1 items-center gap-2 rounded-md border border-border bg-muted/30 px-3 text-left font-body text-muted-foreground transition-colors hover:border-foreground hover:text-foreground cursor-pointer"
         >
           <Search className="h-4 w-4 shrink-0" />
           <span className="flex-1 truncate text-sm">Search symbols</span>
-          <span className="hidden shrink-0 rounded border px-1.5 py-0.5 font-mono text-[11px] sm:inline">
+          <span className="shrink-0 rounded border border-border px-1.5 py-0.5 font-mono text-[11px]">
             /
           </span>
         </button>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-3">
         <ThemeToggle />
 
-        <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
+        <label className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="whitespace-nowrap">Role</span>
+          <select
+            value={currentRole}
+            onChange={handleRoleChange}
+            aria-label="Select role"
+            className="h-9 rounded-md border border-border bg-card px-2 font-body text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option value="Viewer">Viewer</option>
+            <option value="Analyst">Analyst</option>
+            <option value="Administrator">Administrator</option>
+          </select>
+        </label>
+
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span className="relative inline-flex h-2 w-2">
             <span className="absolute inset-0 animate-ping rounded-full bg-live opacity-75" />
             <span className="relative h-2 w-2 rounded-full bg-live" />
@@ -109,18 +164,18 @@ export function TopNavbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="relative text-muted-foreground hover:text-foreground"
+              className="relative text-muted-foreground hover:bg-accent hover:text-foreground"
               aria-label="Notifications"
             >
               <Bell className="h-5 w-5" />
-              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full border border-card bg-down" />
+              <span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full border border-card bg-down" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="w-[340px] border border-border bg-card p-0 shadow-xl ring-1 ring-border/60 backdrop-blur-none"
+            className="w-[340px] border border-border bg-card p-0 shadow-xl overflow-hidden"
           >
-            <div className="flex items-baseline justify-between gap-2 border-b px-4 py-3">
+            <div className="flex items-baseline justify-between gap-2 border-b border-border px-4 py-3">
               <span className="font-display text-sm font-semibold">
                 Notifications
               </span>
@@ -131,10 +186,10 @@ export function TopNavbar() {
                 <button
                   key={n.id}
                   type="button"
-                  onClick={() => navigate("/app/alerts")}
-                  className="flex flex-col gap-0.5 border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-muted/30"
+                  onClick={() => navigate(n.route)}
+                  className="flex flex-col gap-1 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-muted/30"
                 >
-                  <span className={`text-sm font-semibold ${n.tone}`}>
+                  <span className={`text-[13px] font-semibold ${n.tone}`}>
                     {n.title}
                   </span>
                   <span className="text-xs leading-snug text-muted-foreground">
@@ -149,7 +204,7 @@ export function TopNavbar() {
             <button
               type="button"
               onClick={() => navigate("/app/alerts")}
-              className="w-full px-4 py-3 text-left text-sm font-medium text-primary transition-colors hover:bg-muted/30"
+              className="w-full px-4 py-3 text-center text-xs font-medium text-primary transition-colors hover:bg-muted/30 border-t border-border"
             >
               View all alerts
             </button>
@@ -158,56 +213,66 @@ export function TopNavbar() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.avatarUrl} alt={user?.name ?? "User"} />
-                <AvatarFallback>
-                  {user ? initials : <User className="h-4 w-4" />}
-                </AvatarFallback>
-              </Avatar>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative text-muted-foreground hover:bg-accent hover:text-foreground"
+              aria-label="User menu"
+            >
+              <User className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-56 border border-border bg-card shadow-xl ring-1 ring-border/60 backdrop-blur-none"
+            className="w-60 border border-border bg-card shadow-xl overflow-hidden"
             align="end"
             forceMount
           >
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">
-                  {user?.name ?? "Guest"}
-                </p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user?.email ?? "signed out"}
-                </p>
-                <p className="pt-1 text-[11px] uppercase tracking-wide text-muted-foreground">
-                  {user?.role ?? "Viewer"}
-                </p>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate("/app/settings")}>
-              <User className="mr-2 h-4 w-4" />
-              Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/app/settings")}>
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive"
-              onClick={() => {
-                logout();
-                navigate("/login");
-              }}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Log out
-            </DropdownMenuItem>
+            <div className="flex flex-col gap-0.5 border-b border-border p-4">
+              <span className="text-sm font-semibold">
+                {user?.name ?? "Rachel Osei"}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {user?.email ?? "rachel.osei@firm.com"}
+              </span>
+              <span className="mt-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {currentRole}
+              </span>
+            </div>
+            <div className="p-1">
+              <DropdownMenuItem
+                onClick={() => navigate("/app/settings")}
+                className="cursor-pointer py-2 text-sm"
+              >
+                <User className="mr-2.5 h-4 w-4 text-muted-foreground" />
+                Account settings
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => navigate("/app/settings")}
+                className="cursor-pointer py-2 text-sm"
+              >
+                <Settings className="mr-2.5 h-4 w-4 text-muted-foreground" />
+                Notification preferences
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer py-2 text-sm text-destructive focus:text-destructive"
+                onClick={() => {
+                  logout();
+                  navigate("/login");
+                }}
+              >
+                <LogOut className="mr-2.5 h-4 w-4" />
+                Sign out
+              </DropdownMenuItem>
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <GlobalSearchDialog
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
     </header>
   );
 }

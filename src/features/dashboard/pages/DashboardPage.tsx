@@ -1,17 +1,8 @@
-import { ArrowUpRight, Info, RefreshCw, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { AlertCircle } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import { Badge } from "@/shared/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/ui/table";
 import { Skeleton } from "@/shared/ui/skeleton";
-import { EmptyState } from "@/shared/components/EmptyState";
-import { DashboardCard } from "@/features/dashboard/components/DashboardCard";
 import { OverviewStatCard } from "@/features/dashboard/components/OverviewStatCard";
 import { cn } from "@/shared/utils/cn";
 
@@ -103,54 +94,6 @@ const WATCHLIST: WatchRow[] = [
   },
 ];
 
-const OVERVIEW_CARDS = [
-  {
-    label: "Total value",
-    value: "$103,918.65",
-    change: "+0.72%",
-    trend: "up" as const,
-    note: "across 2 portfolios",
-  },
-  {
-    label: "Today",
-    value: "+$742.18",
-    change: "+0.72%",
-    trend: "up" as const,
-    note: "since 00:00 UTC",
-  },
-  {
-    label: "Open alerts",
-    value: "4",
-    change: "1 new",
-    trend: "flat" as const,
-    note: "triggered in 24 hours",
-  },
-];
-
-const PREDICTIONS = [
-  { symbol: "MSFT", confidence: "92%", signal: "BUY" },
-  { symbol: "AMZN", confidence: "76%", signal: "HOLD" },
-  { symbol: "META", confidence: "68%", signal: "BUY" },
-];
-
-const TOP_MOVERS = [
-  { symbol: "PLTR", change: "+6.2%", trend: "up" as const },
-  { symbol: "NET", change: "+4.8%", trend: "up" as const },
-  { symbol: "SNOW", change: "-3.9%", trend: "down" as const },
-];
-
-function formatChange(chg: number) {
-  const glyph = chg > 0 ? "▲" : chg < 0 ? "▼" : "—";
-  const text = `${chg > 0 ? "+" : ""}${chg.toFixed(2)}%`;
-  return { glyph, text };
-}
-
-function changeTone(chg: number) {
-  if (chg > 0) return "text-up-strong";
-  if (chg < 0) return "text-down";
-  return "text-muted-foreground";
-}
-
 function Sparkline({ data }: { data: number[] }) {
   const width = 72;
   const height = 24;
@@ -160,7 +103,7 @@ function Sparkline({ data }: { data: number[] }) {
   const points = data
     .map((value, index) => {
       const x = (index / (data.length - 1)) * width;
-      const y = height - ((value - min) / range) * height;
+      const y = height - ((value - min) / range) * (height - 4) - 2;
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(" ");
@@ -171,7 +114,7 @@ function Sparkline({ data }: { data: number[] }) {
       width={width}
       height={height}
       viewBox={`0 0 ${width} ${height}`}
-      className={cn(trendUp ? "text-up-strong" : "text-down")}
+      className={cn(trendUp ? "text-up" : "text-down")}
       aria-hidden="true"
     >
       <polyline
@@ -197,7 +140,7 @@ function SentimentBar({ sent }: { sent: number }) {
       <div
         className={cn(
           "absolute top-0 bottom-0 rounded-full",
-          isPositive ? "bg-up-strong" : "bg-down",
+          isPositive ? "bg-up" : "bg-down",
         )}
         style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
       />
@@ -207,23 +150,18 @@ function SentimentBar({ sent }: { sent: number }) {
 }
 
 export function DashboardPage() {
-  const isLoading = false;
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  const handleRefresh = () => {
+    setLoading(true);
+    setTimeout(() => setLoading(false), 600);
+  };
 
   return (
-    <div className="space-y-8">
-      <section className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span
-              className="relative inline-flex h-2.5 w-2.5"
-              aria-hidden="true"
-            >
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-live" />
-            </span>
-            <Badge variant="secondary">Live</Badge>
-            as of 14:32 UTC · updated 30 seconds ago
-          </div>
+    <section className="flex flex-col gap-6" data-screen-label="S-03 Dashboard">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
             Dashboard
           </h1>
@@ -231,274 +169,196 @@ export function DashboardPage() {
             Your tracked symbols, forecasts and open alerts.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline">Create alert</Button>
-          <Button>
-            New forecast
-            <ArrowUpRight className="ml-2 h-4 w-4" />
-          </Button>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground tabular-nums">
+          as of 14:32 UTC · live
         </div>
-      </section>
+      </div>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        {OVERVIEW_CARDS.map((card) => (
-          <OverviewStatCard
-            key={card.label}
-            label={card.label}
-            value={card.value}
-            change={card.change}
-            trend={card.trend}
-            icon={<Sparkles className="h-4 w-4 text-muted-foreground" />}
-          />
-        ))}
-      </section>
+      <div className="grid gap-4 md:grid-cols-3">
+        <OverviewStatCard
+          label="Total value"
+          value="$103,918.65"
+          change="+0.72%"
+          trend="up"
+          note="across 2 portfolios"
+        />
+        <OverviewStatCard
+          label="Today"
+          value="+$742.18"
+          change="+0.72%"
+          trend="up"
+          note="since 00:00 UTC"
+        />
+        <OverviewStatCard
+          label="Open alerts"
+          value="4"
+          change="1 new"
+          trend="flat"
+          note="triggered in 24 hours"
+        />
+      </div>
 
-      <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <DashboardCard
-          title="Watchlist"
-          description="Live prices for your tracked symbols"
-          action={
-            <div className="flex items-center gap-3">
-              <span className="hidden text-xs text-muted-foreground sm:inline">
-                Updated 30 seconds ago
-              </span>
-              <Button variant="outline" size="sm">
-                <RefreshCw className="mr-2 h-3.5 w-3.5" />
-                Refresh
-              </Button>
-            </div>
-          }
-        >
-          {isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <Skeleton key={index} className="h-10 w-full" />
-              ))}
-            </div>
-          ) : WATCHLIST.length === 0 ? (
-            <EmptyState
-              title="No symbols yet"
-              description="Add symbols to build a personalized watchlist."
-            />
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Symbol</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
-                  <TableHead className="text-right">Change</TableHead>
-                  <TableHead className="text-right">7d forecast</TableHead>
-                  <TableHead>Sentiment</TableHead>
-                  <TableHead className="text-right">30d</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {WATCHLIST.map((row) => {
-                  const { glyph, text } = formatChange(row.chg);
-                  return (
-                    <TableRow key={row.sym} className="cursor-pointer">
-                      <TableCell>
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-display text-sm font-semibold">
-                            {row.sym}
-                          </span>
-                          <span className="truncate text-[11px] text-muted-foreground">
-                            {row.name}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-sm font-semibold tabular-nums">
-                            {row.price}
-                          </span>
-                          <span
-                            className={cn(
-                              "text-[11px] tabular-nums",
-                              row.stale
-                                ? "text-hold-strong"
-                                : "text-muted-foreground",
-                            )}
-                          >
-                            {row.freshness}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell
-                        className={cn(
-                          "text-right text-sm font-semibold tabular-nums",
-                          changeTone(row.chg),
-                        )}
-                      >
-                        {glyph} {text}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex flex-col gap-0.5">
-                          <span
-                            className={cn(
-                              "text-sm tabular-nums",
-                              row.stale && "text-muted-foreground",
-                            )}
-                          >
-                            {row.fc}
-                          </span>
-                          <span className="text-[11px] tabular-nums text-muted-foreground">
-                            {row.fcBand}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <SentimentBar sent={row.sent} />
-                          <span className="whitespace-nowrap text-xs tabular-nums">
-                            {row.sent > 0 ? "+" : ""}
-                            {row.sent.toFixed(2)}
-                          </span>
-                          {row.sentNote && (
-                            <span className="whitespace-nowrap text-[11px] text-hold-strong">
-                              {row.sentNote}
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end">
-                          <Sparkline data={row.spark} />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </DashboardCard>
+      <div className="overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-muted/30 px-4 py-3">
+          <div>
+            <h2 className="text-base font-semibold">Watchlist</h2>
+            <p className="text-xs text-muted-foreground">
+              Live prices for your tracked symbols
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground tabular-nums">
+              Updated 30 seconds ago
+            </span>
+            <Button variant="outline" size="sm" onClick={handleRefresh}>
+              Refresh
+            </Button>
+          </div>
+        </div>
 
-        <DashboardCard
-          title="AI Predictions"
-          description="Top confidence signals"
-          action={<Button variant="ghost">View all</Button>}
-        >
-          <div className="space-y-4">
-            {PREDICTIONS.map((prediction) => (
-              <div
-                key={prediction.symbol}
-                className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-4 py-3"
-              >
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {prediction.symbol}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Confidence {prediction.confidence}
-                  </p>
-                </div>
-                <Badge
-                  className={cn(
-                    prediction.signal === "BUY" && "bg-up-strong text-white",
-                    prediction.signal === "HOLD" && "bg-hold-strong text-white",
-                  )}
-                >
-                  {prediction.signal}
-                </Badge>
+        {loading ? (
+          <div className="flex flex-col gap-3 p-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="flex items-center gap-4">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-8 w-28" />
+                <Skeleton className="h-4 w-36" />
               </div>
             ))}
+            <p className="mt-1 text-xs text-muted-foreground">
+              Fetching quotes…
+            </p>
           </div>
-        </DashboardCard>
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-        <DashboardCard
-          title="Portfolio snapshot"
-          description="Today's allocation and performance"
-          action={<Button variant="ghost">Open portfolio</Button>}
-        >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-              <p className="text-xs text-muted-foreground">Net worth</p>
-              <p className="text-xl font-semibold">$248,920</p>
-              <p className="text-xs text-up-strong">+3.4% this week</p>
-            </div>
-            <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-              <p className="text-xs text-muted-foreground">Risk score</p>
-              <p className="text-xl font-semibold">Moderate</p>
-              <p className="text-xs text-muted-foreground">
-                Balanced growth allocation
-              </p>
-            </div>
-            <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-              <p className="text-xs text-muted-foreground">Cash available</p>
-              <p className="text-xl font-semibold">$18,240</p>
-              <p className="text-xs text-up-strong">Ready to deploy</p>
-            </div>
-            <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
-              <p className="text-xs text-muted-foreground">Forecast bias</p>
-              <p className="text-xl font-semibold">Bullish</p>
-              <p className="text-xs text-muted-foreground">
-                AI signals skew positive
-              </p>
-            </div>
-          </div>
-        </DashboardCard>
-
-        <div className="grid gap-6">
-          <DashboardCard
-            title="Market sentiment"
-            description="News-driven momentum"
-          >
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Sentiment index
-                </span>
-                <span className="text-sm font-semibold text-up-strong">
-                  Positive
-                </span>
-              </div>
-              <div className="h-2 w-full rounded-full bg-muted">
-                <div className="h-2 w-3/4 rounded-full bg-up-strong" />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                AI models detected sustained optimism across technology and
-                industrial sectors.
-              </p>
-            </div>
-          </DashboardCard>
-
-          <DashboardCard
-            title="Top movers"
-            description="Largest intraday moves"
-          >
-            <div className="space-y-3">
-              {TOP_MOVERS.map((mover) => (
-                <div
-                  key={mover.symbol}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span className="font-medium">{mover.symbol}</span>
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      mover.trend === "up" && "text-up-strong",
-                      mover.trend === "down" && "text-down",
-                    )}
-                  >
-                    {mover.change}
-                  </Badge>
+        ) : (
+          <div role="table" aria-label="Watchlist" className="overflow-x-auto">
+            <div className="min-w-[900px]">
+              <div
+                role="row"
+                className="grid h-12 grid-cols-[96px_1.1fr_1.1fr_1.5fr_1.7fr_92px] items-center gap-x-4 border-b border-border px-4 text-xs font-medium text-muted-foreground"
+              >
+                <div role="columnheader">Symbol</div>
+                <div role="columnheader" className="text-right">
+                  Price
                 </div>
-              ))}
-            </div>
-          </DashboardCard>
-        </div>
-      </section>
+                <div role="columnheader" className="text-right">
+                  Change
+                </div>
+                <div role="columnheader" className="text-right">
+                  7d forecast
+                </div>
+                <div role="columnheader">Sentiment</div>
+                <div role="columnheader" className="text-right">
+                  30d
+                </div>
+              </div>
 
-      <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/30 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
-        <Info className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden="true" />
+              {WATCHLIST.map((row) => {
+                const isUp = row.chg > 0;
+                const isDown = row.chg < 0;
+                const chgGlyph = isUp ? "▲" : isDown ? "▼" : "─";
+                const chgText =
+                  (isUp ? "+" : isDown ? "−" : "") +
+                  Math.abs(row.chg).toFixed(2) +
+                  "%";
+                const chgColor = isUp
+                  ? "text-up"
+                  : isDown
+                    ? "text-down"
+                    : "text-muted-foreground";
+
+                return (
+                  <div
+                    key={row.sym}
+                    role="row"
+                    onClick={() => navigate(`/app/market/stock/${row.sym}`)}
+                    className="grid grid-cols-[96px_1.1fr_1.1fr_1.5fr_1.7fr_92px] items-center gap-x-4 border-b border-border px-4 py-3.5 transition-colors cursor-pointer hover:bg-muted/40"
+                  >
+                    <div role="cell" className="flex flex-col gap-0.5">
+                      <span className="font-display text-sm font-semibold">
+                        {row.sym}
+                      </span>
+                      <span className="truncate text-[11px] text-muted-foreground">
+                        {row.name}
+                      </span>
+                    </div>
+
+                    <div
+                      role="cell"
+                      className="flex flex-col gap-0.5 text-right"
+                    >
+                      <span className="text-sm font-semibold tabular-nums">
+                        {row.price}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-[11px] tabular-nums",
+                          row.stale ? "text-hold" : "text-muted-foreground",
+                        )}
+                      >
+                        {row.freshness}
+                      </span>
+                    </div>
+
+                    <div
+                      role="cell"
+                      className={cn(
+                        "text-right text-sm font-semibold tabular-nums",
+                        chgColor,
+                      )}
+                    >
+                      {chgGlyph} {chgText}
+                    </div>
+
+                    <div
+                      role="cell"
+                      className="flex flex-col gap-0.5 text-right"
+                    >
+                      <span
+                        className={cn(
+                          "text-sm tabular-nums",
+                          row.stale ? "text-muted-foreground" : "",
+                        )}
+                      >
+                        {row.fc}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground tabular-nums">
+                        {row.fcBand}
+                      </span>
+                    </div>
+
+                    <div role="cell" className="flex items-center gap-2">
+                      <SentimentBar sent={row.sent} />
+                      <span className="whitespace-nowrap text-xs tabular-nums">
+                        {row.sent > 0 ? "+" : ""}
+                        {row.sent.toFixed(2)}
+                      </span>
+                      {row.sentNote && (
+                        <span className="whitespace-nowrap text-[11px] text-hold">
+                          {row.sentNote}
+                        </span>
+                      )}
+                    </div>
+
+                    <div role="cell" className="flex justify-end">
+                      <Sparkline data={row.spark} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
+        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
         <span>
           Model output only. Not financial advice. Past accuracy does not
           guarantee future results.
         </span>
       </div>
-    </div>
+    </section>
   );
 }

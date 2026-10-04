@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { Activity } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { useLayoutStore } from "@/app/store/layoutStore";
 import {
@@ -17,7 +18,11 @@ const navLinkClass = (isActive: boolean, collapsed: boolean) =>
 
 export function Sidebar() {
   const { isSidebarCollapsed } = useLayoutStore();
-  const role = useAuthStore((state) => state.user?.role ?? "Administrator");
+  const role = useAuthStore((state) => state.user?.role ?? "Analyst");
+
+  const mainItems = NAVIGATION_ITEMS.filter(
+    (item) => !item.roles || item.roles.includes(role),
+  );
 
   const footerItems = NAVIGATION_FOOTER_ITEMS.filter(
     (item) => !item.roles || item.roles.includes(role),
@@ -26,16 +31,19 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col border-r bg-card transition-all duration-300",
+        "hidden md:flex flex-col border-r border-border bg-card transition-all duration-300",
         isSidebarCollapsed ? "w-[80px]" : "w-64",
       )}
     >
-      <div className="flex h-16 shrink-0 items-center border-b px-6">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary">
-          <span className="text-sm font-bold text-primary-foreground">FQ</span>
-        </span>
+      <div
+        className={cn(
+          "flex h-16 shrink-0 items-center border-b border-border",
+          isSidebarCollapsed ? "justify-center px-0" : "px-6 gap-3",
+        )}
+      >
+        <Activity className="h-6 w-6 shrink-0 text-primary" />
         {!isSidebarCollapsed && (
-          <span className="ml-3 overflow-hidden whitespace-nowrap font-display text-lg font-bold tracking-tight transition-all">
+          <span className="whitespace-nowrap font-display text-lg font-bold tracking-tight">
             FinSight<span className="text-muted-foreground">IQ</span>
           </span>
         )}
@@ -43,7 +51,7 @@ export function Sidebar() {
 
       <ScrollArea className="flex-1 py-4">
         <nav aria-label="Primary" className="flex flex-col gap-1 px-3">
-          {NAVIGATION_ITEMS.map((item) => (
+          {mainItems.map((item) => (
             <NavLink
               key={item.href}
               to={item.href}

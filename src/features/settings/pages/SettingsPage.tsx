@@ -1,103 +1,108 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
-import { z } from "zod";
-import { LoaderCircle, LogOut, Monitor, Smartphone } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/shared/ui/card";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { LogOut, Monitor, Smartphone } from "lucide-react";
 import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Badge } from "@/shared/ui/badge";
-import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
+import { Checkbox } from "@/shared/ui/checkbox";
 import { PasswordInput } from "@/features/auth/components/PasswordInput";
-import { FeaturePageShell } from "@/shared/components/FeaturePageShell";
+import { PasswordStrength } from "@/features/auth/components/PasswordStrength";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { cn } from "@/shared/utils/cn";
 
-const changePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(8, "Enter your current password"),
-    newPassword: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Include at least one uppercase letter")
-      .regex(/[0-9]/, "Include at least one number"),
-  })
-  .refine((values) => values.currentPassword !== values.newPassword, {
-    message: "New password must be different from the current password",
-    path: ["newPassword"],
-  });
+type SettingsTab = "profile" | "security" | "notify";
 
-type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
-
-interface SessionRow {
+interface SessionItem {
   id: string;
   device: string;
   meta: string;
   current: boolean;
-  icon: typeof Monitor;
 }
 
-const INITIAL_SESSIONS: SessionRow[] = [
+const INITIAL_SESSIONS: SessionItem[] = [
   {
-    id: "session-1",
+    id: "sess-1",
     device: "Chrome · macOS",
     meta: "London · signed in 17 Aug 08:12 UTC",
     current: true,
-    icon: Monitor,
   },
   {
-    id: "session-2",
+    id: "sess-2",
     device: "Safari · iPhone",
     meta: "London · last active 15 Aug 19:40 UTC",
     current: false,
-    icon: Smartphone,
   },
 ];
 
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
-
 export function SettingsPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, logout } = useAuthStore();
-  const [sessions, setSessions] = useState<SessionRow[]>(INITIAL_SESSIONS);
-  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<ChangePasswordValues>({
-    resolver: zodResolver(changePasswordSchema),
-    defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-    },
-  });
+  const tabParam = searchParams.get("tab");
+  const activeTab: SettingsTab =
+    tabParam === "security"
+      ? "security"
+      : tabParam === "notify" || tabParam === "notifications"
+        ? "notify"
+        : "profile";
 
-  const onSubmit = async () => {
-    setPasswordSuccess(false);
-    await Promise.resolve();
-    setPasswordSuccess(true);
-    reset();
+  const setActiveTab = (tab: SettingsTab) => {
+    setSearchParams({ tab });
   };
 
-  const handleRevoke = (id: string) => {
-    setSessions((prev) => prev.filter((session) => session.id !== id));
+  // Profile tab state
+  const [fullName, setFullName] = useState(user?.name ?? "Rachel Osei");
+  const [timeZone, setTimeZone] = useState("UTC");
+
+  // Security tab state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [sessions, setSessions] = useState<SessionItem[]>(INITIAL_SESSIONS);
+
+  // Notification tab state
+  const [alertEmails, setAlertEmails] = useState(true);
+  const [degradedNotices, setDegradedNotices] = useState(true);
+  const [weeklyDigest, setWeeklyDigest] = useState(false);
+  const [systemAlerts, setSystemAlerts] = useState(true);
+  const [digestFreq, setDigestFreq] = useState("Weekly, Monday 08:00");
+  const [quietHours, setQuietHours] = useState("22:00 – 07:00 local");
+
+  const handleSaveProfile = () => {
+    toast.success("Settings saved", {
+      description: "Changes apply on your next request.",
+    });
+  };
+
+  const handleDiscardProfile = () => {
+    setFullName(user?.name ?? "Rachel Osei");
+    setTimeZone("UTC");
+  };
+
+  const handleUpdatePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentPassword) {
+      toast.error("Please enter your current password");
+      return;
+    }
+    if (!newPassword || newPassword.length < 8) {
+      toast.error("New password must be at least 8 characters");
+      return;
+    }
+    toast.success("Password updated", {
+      description: "Use your new password on your next sign in.",
+    });
+    setCurrentPassword("");
+    setNewPassword("");
+  };
+
+  const handleRevokeSession = (session: SessionItem) => {
+    setSessions((prev) => prev.filter((s) => s.id !== session.id));
+    toast.success("Session revoked", {
+      description: `${session.device} was signed out.`,
+    });
   };
 
   const handleSignOut = () => {
@@ -105,130 +110,226 @@ export function SettingsPage() {
     navigate("/login", { replace: true });
   };
 
+  const roleText = (user?.role ?? "Analyst").toUpperCase();
+
   return (
-    <FeaturePageShell
-      title="Settings"
-      description="Your profile, sign-in security and session controls."
-    >
-      <div className="flex flex-col gap-6">
-        <Card>
-          <CardContent className="flex flex-wrap items-center gap-4 pt-6">
-            <Avatar className="h-14 w-14">
-              <AvatarFallback className="text-base font-medium">
-                {user ? getInitials(user.name) : "?"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col gap-1">
-              <span className="text-base font-semibold">
-                {user?.name ?? "Signed-out user"}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                {user?.email ?? "No email on record"}
-              </span>
-            </div>
-            {user && (
-              <Badge variant="outline" className="ml-auto uppercase">
-                {user.role}
-              </Badge>
-            )}
-          </CardContent>
-        </Card>
+    <section className="flex flex-col gap-5 pb-14 font-body">
+      {/* Title & subtitle matching prototype */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="font-display text-3xl font-semibold tracking-tight">
+            Settings
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Your profile, sign-in security and notification preferences.
+          </p>
+        </div>
+      </div>
 
-        <div className="flex max-w-2xl flex-col gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Change password</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form
-                className="flex flex-col gap-5"
-                onSubmit={handleSubmit(onSubmit)}
+      {/* Pill tabs matching prototype Image */}
+      <div className="flex w-fit items-center gap-1 rounded-lg border border-border bg-card p-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab("profile")}
+          className={cn(
+            "rounded-md px-4 py-1.5 text-xs font-semibold transition-colors cursor-pointer",
+            activeTab === "profile"
+              ? "bg-foreground text-background"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
+          )}
+        >
+          Profile
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("security")}
+          className={cn(
+            "rounded-md px-4 py-1.5 text-xs font-semibold transition-colors cursor-pointer",
+            activeTab === "security"
+              ? "bg-foreground text-background"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
+          )}
+        >
+          Security
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("notify")}
+          className={cn(
+            "rounded-md px-4 py-1.5 text-xs font-semibold transition-colors cursor-pointer",
+            activeTab === "notify"
+              ? "bg-foreground text-background"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
+          )}
+        >
+          Notifications
+        </button>
+      </div>
+
+      {/* ======================= TAB: PROFILE ======================= */}
+      {activeTab === "profile" && (
+        <div className="flex max-w-[640px] flex-col gap-5 rounded-xl border border-border bg-card p-6 shadow-sm">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="set-name">Full name</Label>
+            <Input
+              id="set-name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="h-10"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="set-email">Email</Label>
+            <Input
+              id="set-email"
+              value={user?.email ?? "rachel.osei@firm.com"}
+              disabled
+              className="h-10 opacity-75"
+            />
+            <span className="text-xs text-muted-foreground">
+              Email changes go through an administrator so audit history stays
+              intact.
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-4">
+            <div className="flex flex-1 min-w-[200px] flex-col gap-2">
+              <Label htmlFor="set-tz">Time zone</Label>
+              <select
+                id="set-tz"
+                value={timeZone}
+                onChange={(e) => setTimeZone(e.target.value)}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 font-body text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               >
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="pw-current">Current password</Label>
-                  <PasswordInput
-                    id="pw-current"
-                    autoComplete="current-password"
-                    hasError={Boolean(errors.currentPassword?.message)}
-                    aria-invalid={Boolean(errors.currentPassword?.message)}
-                    {...register("currentPassword")}
-                  />
-                  {errors.currentPassword?.message && (
-                    <p className="text-xs text-destructive">
-                      {errors.currentPassword.message}
-                    </p>
-                  )}
-                </div>
+                <option value="UTC">UTC</option>
+                <option value="Europe/London">Europe/London</option>
+                <option value="America/New_York">America/New_York</option>
+                <option value="Asia/Singapore">Asia/Singapore</option>
+              </select>
+            </div>
 
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="pw-new">New password</Label>
-                  <PasswordInput
-                    id="pw-new"
-                    autoComplete="new-password"
-                    hasError={Boolean(errors.newPassword?.message)}
-                    aria-invalid={Boolean(errors.newPassword?.message)}
-                    {...register("newPassword")}
-                  />
-                  {errors.newPassword?.message && (
-                    <p className="text-xs text-destructive">
-                      {errors.newPassword.message}
-                    </p>
-                  )}
-                </div>
+            <div className="flex flex-1 min-w-[200px] flex-col gap-2">
+              <span className="text-sm font-medium text-foreground">Role</span>
+              <div className="flex h-10 items-center gap-2.5">
+                <Badge
+                  variant="outline"
+                  className="font-semibold text-xs tracking-wider"
+                >
+                  {roleText}
+                </Badge>
+                <span className="text-xs text-muted-foreground">
+                  granted 14 March 2026
+                </span>
+              </div>
+            </div>
+          </div>
 
-                {passwordSuccess && (
-                  <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                    Password updated.
-                  </p>
-                )}
+          <div className="flex items-center gap-2 pt-1">
+            <Button
+              type="button"
+              onClick={handleSaveProfile}
+              className="cursor-pointer"
+            >
+              Save changes
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleDiscardProfile}
+              className="cursor-pointer"
+            >
+              Discard
+            </Button>
+          </div>
+        </div>
+      )}
 
-                <div>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting && (
-                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Update password
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+      {/* ======================= TAB: SECURITY ======================= */}
+      {activeTab === "security" && (
+        <div className="flex max-w-[640px] flex-col gap-4">
+          {/* Change password card */}
+          <div className="flex flex-col gap-5 rounded-xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="text-base font-semibold text-foreground">
+              Change password
+            </h2>
 
-          <Card className="overflow-hidden py-0">
-            <div className="border-b bg-muted/30 px-6 py-4">
-              <h2 className="text-base font-semibold">Active sessions</h2>
+            <form
+              onSubmit={handleUpdatePassword}
+              className="flex flex-col gap-4"
+            >
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="pw-current">Current password</Label>
+                <PasswordInput
+                  id="pw-current"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="pw-new">New password</Label>
+                <PasswordInput
+                  id="pw-new"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
+                <PasswordStrength password={newPassword} />
+              </div>
+
+              <div className="pt-1">
+                <Button type="submit" className="cursor-pointer">
+                  Update password
+                </Button>
+              </div>
+            </form>
+          </div>
+
+          {/* Active sessions card */}
+          <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+            <div className="border-b border-border bg-muted/30 px-4 py-3">
+              <h2 className="text-base font-semibold text-foreground">
+                Active sessions
+              </h2>
               <p className="text-xs text-muted-foreground">
                 Refresh tokens rotate every 15 minutes
               </p>
             </div>
-            <div>
-              {sessions.map((session) => {
-                const Icon = session.icon;
+
+            <div className="divide-y divide-border">
+              {sessions.map((s) => {
+                const isPhone = s.device.toLowerCase().includes("iphone");
+                const Icon = isPhone ? Smartphone : Monitor;
                 return (
                   <div
-                    key={session.id}
-                    className={cn(
-                      "flex flex-wrap items-center justify-between gap-3 border-b px-6 py-4 last:border-b-0",
-                    )}
+                    key={s.id}
+                    className="flex flex-wrap items-center justify-between gap-3 p-4"
                   >
                     <div className="flex items-center gap-3">
                       <Icon className="h-4 w-4 text-muted-foreground" />
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-medium">
-                          {session.device}
+                        <span className="text-sm font-medium text-foreground">
+                          {s.device}
                         </span>
                         <span className="text-xs tabular-nums text-muted-foreground">
-                          {session.meta}
+                          {s.meta}
                         </span>
                       </div>
                     </div>
-                    {session.current ? (
-                      <Badge variant="outline">This device</Badge>
+
+                    {s.current ? (
+                      <Badge variant="outline" className="text-xs">
+                        This device
+                      </Badge>
                     ) : (
                       <Button
+                        type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => handleRevoke(session.id)}
+                        onClick={() => handleRevokeSession(s)}
+                        className="cursor-pointer"
                       >
                         Revoke
                       </Button>
@@ -237,29 +338,145 @@ export function SettingsPage() {
                 );
               })}
             </div>
-            <p className="px-6 py-4 text-xs leading-relaxed text-muted-foreground">
+
+            <p className="border-t border-border p-4 text-xs leading-relaxed text-muted-foreground">
               If a refresh token is reused, every session is revoked and you are
               signed out with a security notice rather than a generic
               session-expired message.
             </p>
-          </Card>
+          </div>
 
-          <Card>
-            <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-6">
-              <div>
-                <h2 className="text-base font-semibold">Sign out</h2>
-                <CardDescription className="text-xs">
-                  Ends this session on this device only.
-                </CardDescription>
-              </div>
-              <Button variant="outline" onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
+          {/* Sign out card */}
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-card p-6 shadow-sm">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">
                 Sign out
-              </Button>
-            </CardContent>
-          </Card>
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Ends this session on this device only.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSignOut}
+              className="cursor-pointer"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign out
+            </Button>
+          </div>
         </div>
-      </div>
-    </FeaturePageShell>
+      )}
+
+      {/* ======================= TAB: NOTIFICATIONS ======================= */}
+      {activeTab === "notify" && (
+        <div className="flex max-w-[640px] flex-col gap-4">
+          <div className="rounded-xl border border-border bg-card px-6 py-2 shadow-sm">
+            <label className="flex cursor-pointer items-start justify-between gap-4 border-b border-border py-4">
+              <span className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-foreground">
+                  Alert emails
+                </span>
+                <span className="text-xs text-muted-foreground leading-relaxed">
+                  One email per triggered rule, at most one per hour.
+                </span>
+              </span>
+              <Checkbox
+                checked={alertEmails}
+                onCheckedChange={(checked) => setAlertEmails(Boolean(checked))}
+                className="mt-1"
+              />
+            </label>
+
+            <label className="flex cursor-pointer items-start justify-between gap-4 border-b border-border py-4">
+              <span className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-foreground">
+                  Degraded model notices
+                </span>
+                <span className="text-xs text-muted-foreground leading-relaxed">
+                  Tells you when a forecast ran on partial inputs.
+                </span>
+              </span>
+              <Checkbox
+                checked={degradedNotices}
+                onCheckedChange={(checked) =>
+                  setDegradedNotices(Boolean(checked))
+                }
+                className="mt-1"
+              />
+            </label>
+
+            <label className="flex cursor-pointer items-start justify-between gap-4 border-b border-border py-4">
+              <span className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-foreground">
+                  Weekly portfolio digest
+                </span>
+                <span className="text-xs text-muted-foreground leading-relaxed">
+                  Holdings performance and allocation changes every Monday.
+                </span>
+              </span>
+              <Checkbox
+                checked={weeklyDigest}
+                onCheckedChange={(checked) => setWeeklyDigest(Boolean(checked))}
+                className="mt-1"
+              />
+            </label>
+
+            <label className="flex cursor-pointer items-start justify-between gap-4 py-4">
+              <span className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-foreground">
+                  System maintenance alerts
+                </span>
+                <span className="text-xs text-muted-foreground leading-relaxed">
+                  Advance notice of scheduled downtime and data feed upgrades.
+                </span>
+              </span>
+              <Checkbox
+                checked={systemAlerts}
+                onCheckedChange={(checked) => setSystemAlerts(Boolean(checked))}
+                className="mt-1"
+              />
+            </label>
+          </div>
+
+          <div className="flex flex-wrap gap-4 rounded-xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex flex-1 min-w-[200px] flex-col gap-2">
+              <Label htmlFor="digest">Digest frequency</Label>
+              <select
+                id="digest"
+                value={digestFreq}
+                onChange={(e) => setDigestFreq(e.target.value)}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 font-body text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="Weekly, Monday 08:00">
+                  Weekly, Monday 08:00
+                </option>
+                <option value="Daily, 07:00">Daily, 07:00</option>
+                <option value="Off">Off</option>
+              </select>
+            </div>
+
+            <div className="flex flex-1 min-w-[200px] flex-col gap-2">
+              <Label htmlFor="quiet">Quiet hours</Label>
+              <select
+                id="quiet"
+                value={quietHours}
+                onChange={(e) => setQuietHours(e.target.value)}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 font-body text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="22:00 – 07:00 local">22:00 – 07:00 local</option>
+                <option value="None">None</option>
+              </select>
+            </div>
+          </div>
+
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Alerts are email and in-session only. There are no push
+            notifications and no marketing email.
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
