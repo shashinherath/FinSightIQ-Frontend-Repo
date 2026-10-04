@@ -1,61 +1,145 @@
-/**
- * Market Search Page
- * Dedicated search interface for finding and analyzing stocks
- */
-
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search as SearchIcon } from "lucide-react";
-import {
-  useSearchSymbols,
-  useTopMovers,
-} from "@/features/market/hooks/useMarketQueries";
-import type { SearchResult } from "@/features/market/types";
-import {
-  DashboardWidget,
-  WidgetSkeleton,
-} from "@/features/market/components/dashboard/DashboardWidget";
-import { TopMoverItem } from "@/features/market/components/dashboard/MarketCards";
-import { AddToWatchlistButton } from "@/features/market/components/watchlist/AddToWatchlistButton";
-import { Button } from "@/shared/ui/button";
+import { Star } from "lucide-react";
+import { DashboardCard } from "@/features/dashboard/components/DashboardCard";
+import { EmptyState } from "@/shared/components/EmptyState";
 import { cn } from "@/shared/utils/cn";
+
+interface MarketItem {
+  sym: string;
+  name: string;
+  exchange: string;
+  price: string;
+  chg: number;
+  volume: string;
+  watched: boolean;
+}
+
+const MARKETS_DATA: MarketItem[] = [
+  {
+    sym: "NVDA",
+    name: "NVIDIA Corp",
+    exchange: "NASDAQ",
+    price: "182.44",
+    chg: 1.59,
+    volume: "44.1M",
+    watched: true,
+  },
+  {
+    sym: "AAPL",
+    name: "Apple Inc.",
+    exchange: "NASDAQ",
+    price: "231.18",
+    chg: 1.04,
+    volume: "38.6M",
+    watched: true,
+  },
+  {
+    sym: "MSFT",
+    name: "Microsoft Corp",
+    exchange: "NASDAQ",
+    price: "517.60",
+    chg: -0.62,
+    volume: "19.4M",
+    watched: true,
+  },
+  {
+    sym: "AMZN",
+    name: "Amazon.com Inc.",
+    exchange: "NASDAQ",
+    price: "228.75",
+    chg: 0.41,
+    volume: "31.2M",
+    watched: true,
+  },
+  {
+    sym: "JPM",
+    name: "JPMorgan Chase & Co.",
+    exchange: "NYSE",
+    price: "296.12",
+    chg: -0.18,
+    volume: "8.9M",
+    watched: true,
+  },
+  {
+    sym: "TSLA",
+    name: "Tesla Inc.",
+    exchange: "NASDAQ",
+    price: "341.20",
+    chg: 0,
+    volume: "62.7M",
+    watched: true,
+  },
+  {
+    sym: "ASML",
+    name: "ASML Holding NV",
+    exchange: "NASDAQ",
+    price: "918.40",
+    chg: 2.14,
+    volume: "1.4M",
+    watched: false,
+  },
+  {
+    sym: "XOM",
+    name: "Exxon Mobil Corp",
+    exchange: "NYSE",
+    price: "112.86",
+    chg: -1.07,
+    volume: "14.8M",
+    watched: false,
+  },
+  {
+    sym: "SHEL",
+    name: "Shell plc",
+    exchange: "LSE",
+    price: "2,914.50",
+    chg: 0.36,
+    volume: "6.1M",
+    watched: false,
+  },
+];
 
 export function MarketSearchPage() {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchHistory, setSearchHistory] = useState<string[]>(() => {
-    const stored = localStorage.getItem("market_search_history");
-    return stored ? JSON.parse(stored) : [];
-  });
-
-  const { data: searchResults = [], isLoading } = useSearchSymbols(
-    searchQuery,
-    20,
-    { enabled: searchQuery.length > 0 },
+  const [query, setQuery] = useState("");
+  const [exchange, setExchange] = useState("All exchanges");
+  const [assetClass, setAssetClass] = useState("stock");
+  const [watchedState, setWatchedState] = useState<Record<string, boolean>>(
+    () => MARKETS_DATA.reduce((acc, m) => ({ ...acc, [m.sym]: m.watched }), {}),
   );
-  const { data: topMovers, isLoading: moversLoading } = useTopMovers();
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim() && !searchHistory.includes(searchQuery)) {
-      const updated = [searchQuery, ...searchHistory].slice(0, 10);
-      setSearchHistory(updated);
-      localStorage.setItem("market_search_history", JSON.stringify(updated));
-    }
+  const toggleWatch = (sym: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setWatchedState((prev) => ({ ...prev, [sym]: !prev[sym] }));
   };
 
-  const handleSelectResult = (symbol: string) => {
-    navigate(`/app/market/stock/${symbol}`);
-  };
+  const filtered = useMemo(() => {
+    const q = query.trim().toUpperCase();
+    return MARKETS_DATA.filter((m) => {
+      const matchQuery =
+        !q || m.sym.includes(q) || m.name.toUpperCase().includes(q);
+      const matchEx = exchange === "All exchanges" || m.exchange === exchange;
+      return matchQuery && matchEx;
+    });
+  }, [query, exchange]);
 
-  const handleClearHistory = () => {
-    setSearchHistory([]);
-    localStorage.removeItem("market_search_history");
-  };
+  const movers = useMemo(
+    () => [...MARKETS_DATA].sort((a, b) => b.chg - a.chg),
+    [],
+  );
+  const gainers = movers.slice(0, 3);
+  const losers = movers.slice(-3).reverse();
+
+  const resultCount =
+    filtered.length === MARKETS_DATA.length
+      ? "All covered symbols"
+      : `${filtered.length} ${filtered.length === 1 ? "match" : "matches"}`;
 
   return (
-    <div className="flex flex-col gap-5 pb-12">
-      {/* Header */}
+    <section
+      className="flex flex-col gap-5"
+      data-screen-label="S-04 Symbol search"
+    >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1.5">
           <h1 className="font-display text-3xl font-semibold tracking-tight">
@@ -65,281 +149,251 @@ export function MarketSearchPage() {
             Search global symbols and open a detail view.
           </p>
         </div>
+
+        {/* Asset class toggle — prototype shows Stocks and Forex only */}
+        <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
+          {(["stock", "forex"] as const).map((ac) => (
+            <button
+              key={ac}
+              onClick={() => setAssetClass(ac)}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                assetClass === ac
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {ac === "stock" ? "Stocks" : "Forex"}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Search bar */}
-      <form
-        onSubmit={handleSearch}
-        className="rounded-xl border border-border bg-card shadow-sm p-4 flex flex-wrap gap-3 items-center"
-      >
-        <div className="flex-1 min-w-60 flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
+        <div className="flex min-w-[240px] flex-1 flex-col gap-2">
           <label
             htmlFor="mkt-search"
             className="text-xs font-medium text-muted-foreground"
           >
             Search by symbol or company
           </label>
-          <div className="relative">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              id="mkt-search"
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="NVDA, Apple, semiconductors"
-              autoFocus
-              className={cn(
-                "w-full h-10 pl-9 pr-4 bg-background border border-input rounded-md",
-                "text-foreground placeholder:text-muted-foreground text-sm",
-                "focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20",
-                "transition-all duration-200",
-              )}
-            />
-          </div>
+          <input
+            id="mkt-search"
+            type="search"
+            placeholder="NVDA, Apple, semiconductors"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="h-10 w-full rounded-md border border-input bg-background px-3 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          />
         </div>
-      </form>
 
-      {/* Search Results */}
-      {searchQuery ? (
-        <div className="rounded-xl border border-border bg-background overflow-hidden shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-border bg-muted/30">
+        <div className="flex min-w-[160px] flex-col gap-2">
+          <label
+            htmlFor="mkt-exchange"
+            className="text-xs font-medium text-muted-foreground"
+          >
+            Exchange
+          </label>
+          <select
+            id="mkt-exchange"
+            value={exchange}
+            onChange={(e) => setExchange(e.target.value)}
+            className="h-10 w-full rounded-md border border-input bg-background px-3 font-body text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option>All exchanges</option>
+            <option>NASDAQ</option>
+            <option>NYSE</option>
+            <option>LSE</option>
+          </select>
+        </div>
+      </div>
+
+      {filtered.length > 0 ? (
+        <div className="overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-muted/30 px-4 py-3">
             <div>
-              <h2 className="text-base font-semibold">
-                {isLoading
-                  ? "Searching…"
-                  : `${searchResults.length} result${searchResults.length === 1 ? "" : "s"} for "${searchQuery}"`}
-              </h2>
+              <h2 className="text-base font-semibold">{resultCount}</h2>
               <p className="text-xs text-muted-foreground">
-                Click a row to open its chart, statistics and company info
+                Click a row to open its chart, forecast and sentiment
               </p>
             </div>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              as of 14:32 UTC · live
+            </span>
           </div>
 
-          {isLoading ? (
-            <div className="p-4">
-              <WidgetSkeleton lines={5} />
-            </div>
-          ) : searchResults.length > 0 ? (
-            <div
-              role="table"
-              aria-label="Symbol search results"
-              className="overflow-x-auto"
-            >
-              <div className="min-w-[880px]">
-                <div
-                  role="row"
-                  className="grid items-center h-12 px-4 border-b border-border text-xs font-medium text-muted-foreground"
-                  style={{
-                    gridTemplateColumns: "100px 1.6fr 96px 1fr 1fr 56px",
-                    columnGap: 16,
-                  }}
-                >
-                  <div role="columnheader">Symbol</div>
-                  <div role="columnheader">Company</div>
-                  <div role="columnheader">Exchange</div>
-                  <div role="columnheader" className="text-right">
-                    Type
-                  </div>
-                  <div role="columnheader" className="text-right">
-                    Match
-                  </div>
-                  <div role="columnheader" />
+          <div
+            role="table"
+            aria-label="Symbol search results"
+            className="overflow-x-auto"
+          >
+            <div className="min-w-[880px]">
+              <div
+                role="row"
+                className="grid h-12 grid-cols-[100px_1.6fr_96px_1fr_1fr_1fr_56px] items-center gap-x-4 border-b border-border px-4 text-xs font-medium text-muted-foreground"
+              >
+                <div role="columnheader">Symbol</div>
+                <div role="columnheader">Company</div>
+                <div role="columnheader">Exchange</div>
+                <div role="columnheader" className="text-right">
+                  Price
                 </div>
-                {searchResults.map((result: SearchResult) => (
+                <div role="columnheader" className="text-right">
+                  Change
+                </div>
+                <div role="columnheader" className="text-right">
+                  Volume
+                </div>
+                <div role="columnheader" />
+              </div>
+
+              {filtered.map((m) => {
+                const isUp = m.chg > 0;
+                const isDown = m.chg < 0;
+                const chgGlyph = isUp ? "▲" : isDown ? "▼" : "─";
+                const chgText =
+                  (isUp ? "+" : isDown ? "−" : "") +
+                  Math.abs(m.chg).toFixed(2) +
+                  "%";
+                const chgColor = isUp
+                  ? "text-up"
+                  : isDown
+                    ? "text-down"
+                    : "text-muted-foreground";
+                const isWatched = watchedState[m.sym];
+
+                return (
                   <div
-                    key={result.symbol}
+                    key={m.sym}
                     role="row"
-                    onClick={() => handleSelectResult(result.symbol)}
-                    className="grid items-center cursor-pointer px-4 py-3.5 border-b border-border transition-colors hover:bg-muted/50"
-                    style={{
-                      gridTemplateColumns: "100px 1.6fr 96px 1fr 1fr 56px",
-                      columnGap: 16,
-                    }}
+                    onClick={() => navigate(`/app/market/stock/${m.sym}`)}
+                    className="grid grid-cols-[100px_1.6fr_96px_1fr_1fr_1fr_56px] items-center gap-x-4 border-b border-border px-4 py-3.5 transition-colors cursor-pointer hover:bg-muted/40"
                   >
                     <div
                       role="cell"
                       className="font-display text-sm font-semibold"
                     >
-                      {result.symbol}
+                      {m.sym}
                     </div>
-                    <div
-                      role="cell"
-                      className="text-sm whitespace-nowrap overflow-hidden text-ellipsis"
-                    >
-                      {result.name}
+                    <div role="cell" className="truncate text-sm">
+                      {m.name}
                     </div>
                     <div role="cell" className="text-xs text-muted-foreground">
-                      {result.exchange}
+                      {m.exchange}
                     </div>
                     <div
                       role="cell"
-                      className="text-right text-xs text-muted-foreground uppercase"
+                      className="text-right text-sm font-semibold tabular-nums"
                     >
-                      {result.type}
+                      {m.price}
+                    </div>
+                    <div
+                      role="cell"
+                      className={cn(
+                        "text-right text-sm font-semibold tabular-nums",
+                        chgColor,
+                      )}
+                    >
+                      {chgGlyph} {chgText}
                     </div>
                     <div
                       role="cell"
                       className="text-right text-xs text-muted-foreground tabular-nums"
                     >
-                      {result.matchScore && result.matchScore < 1
-                        ? `${(result.matchScore * 100).toFixed(0)}%`
-                        : "—"}
+                      {m.volume}
                     </div>
-                    <div
-                      role="cell"
-                      className="flex justify-end"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <AddToWatchlistButton
-                        symbol={result.symbol}
-                        variant="ghost"
-                        size="sm"
-                      />
+                    <div role="cell" className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={(e) => toggleWatch(m.sym, e)}
+                        aria-label="Add to watchlist"
+                        className={cn(
+                          "flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:bg-accent",
+                          isWatched ? "text-primary" : "text-muted-foreground",
+                        )}
+                      >
+                        <Star
+                          className={cn("h-4 w-4", isWatched && "fill-primary")}
+                        />
+                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          ) : (
-            <div className="p-8 text-center">
-              <p className="text-muted-foreground">
-                No symbols match &quot;{searchQuery}&quot;
-              </p>
-              <p className="text-sm text-muted-foreground/80 mt-2">
-                Check the ticker, or search by company name. Coverage is US, UK
-                and EU listed equities.
-              </p>
-            </div>
-          )}
-        </div>
-      ) : null}
-
-      {/* Search History */}
-      {!searchQuery && searchHistory.length > 0 && (
-        <DashboardWidget
-          title="Recent Searches"
-          description="Your search history"
-        >
-          <div className="space-y-3">
-            {searchHistory.map((query) => (
-              <button
-                key={query}
-                onClick={() => setSearchQuery(query)}
-                className={cn(
-                  "w-full text-left px-4 py-3 rounded-lg border border-border",
-                  "bg-muted/20 hover:bg-muted/40 transition-colors duration-150",
-                )}
-              >
-                <p className="font-semibold text-foreground">{query}</p>
-              </button>
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleClearHistory}
-              className="w-full mt-4"
-            >
-              Clear History
-            </Button>
           </div>
-        </DashboardWidget>
-      )}
-
-      {/* Top gainers / losers */}
-      {!searchQuery && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <DashboardWidget
-            title="Top Gainers"
-            description="Best performing stocks"
-            loading={moversLoading}
-          >
-            <div className="flex flex-col gap-2">
-              {topMovers?.gainers && topMovers.gainers.length > 0 ? (
-                topMovers.gainers
-                  .slice(0, 5)
-                  .map((g) => (
-                    <TopMoverItem
-                      key={g.symbol}
-                      symbol={g.symbol}
-                      name={g.name}
-                      price={g.price}
-                      change={g.priceChange}
-                      changePercent={g.priceChangePercent}
-                      onClick={() => handleSelectResult(g.symbol)}
-                    />
-                  ))
-              ) : (
-                <p className="text-muted-foreground text-sm">
-                  No data available
-                </p>
-              )}
-            </div>
-          </DashboardWidget>
-
-          <DashboardWidget
-            title="Top Losers"
-            description="Weakest performers today"
-            loading={moversLoading}
-          >
-            <div className="flex flex-col gap-2">
-              {topMovers?.losers && topMovers.losers.length > 0 ? (
-                topMovers.losers
-                  .slice(0, 5)
-                  .map((g) => (
-                    <TopMoverItem
-                      key={g.symbol}
-                      symbol={g.symbol}
-                      name={g.name}
-                      price={g.price}
-                      change={g.priceChange}
-                      changePercent={g.priceChangePercent}
-                      onClick={() => handleSelectResult(g.symbol)}
-                    />
-                  ))
-              ) : (
-                <p className="text-muted-foreground text-sm">
-                  No data available
-                </p>
-              )}
-            </div>
-          </DashboardWidget>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-border bg-card p-8 shadow-sm">
+          <EmptyState
+            title={`No symbols match “${query}”`}
+            description="Check the ticker, or search by company name. Coverage is US, UK and EU listed equities."
+          />
         </div>
       )}
 
-      {/* Quick Tips */}
-      {!searchQuery && (
-        <DashboardWidget
-          title="Search Tips"
-          description="How to search effectively"
+      <div className="grid gap-4 lg:grid-cols-2">
+        <DashboardCard title="Top Gainers" description="Best performing stocks">
+          <div className="flex flex-col gap-2">
+            {gainers.map((g) => (
+              <div
+                key={g.sym}
+                onClick={() => navigate(`/app/market/stock/${g.sym}`)}
+                className="flex items-center justify-between rounded-lg border border-border bg-card p-3 transition-colors cursor-pointer hover:bg-muted/40"
+              >
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-display text-sm font-semibold">
+                    {g.sym}
+                  </span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {g.name}
+                  </span>
+                </div>
+                <div className="flex flex-col items-end gap-0.5">
+                  <span className="text-sm font-semibold tabular-nums">
+                    {g.price}
+                  </span>
+                  <span className="text-xs font-semibold text-up tabular-nums">
+                    ▲ +{g.chg.toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DashboardCard>
+
+        <DashboardCard
+          title="Top Losers"
+          description="Weakest performers today"
         >
-          <ul className="space-y-3 text-sm text-foreground/90">
-            <li className="flex gap-3">
-              <span className="font-bold text-primary flex-shrink-0">1.</span>
-              <span>
-                Enter a stock symbol (e.g., AAPL, GOOGL, MSFT) to find specific
-                companies
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="font-bold text-primary flex-shrink-0">2.</span>
-              <span>Type a company name to search by business name</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="font-bold text-primary flex-shrink-0">3.</span>
-              <span>
-                Results include stocks, ETFs, and other investment products
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="font-bold text-primary flex-shrink-0">4.</span>
-              <span>
-                Click on any result to view detailed stock information and
-                charts
-              </span>
-            </li>
-          </ul>
-        </DashboardWidget>
-      )}
-    </div>
+          <div className="flex flex-col gap-2">
+            {losers.map((l) => (
+              <div
+                key={l.sym}
+                onClick={() => navigate(`/app/market/stock/${l.sym}`)}
+                className="flex items-center justify-between rounded-lg border border-border bg-card p-3 transition-colors cursor-pointer hover:bg-muted/40"
+              >
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-display text-sm font-semibold">
+                    {l.sym}
+                  </span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {l.name}
+                  </span>
+                </div>
+                <div className="flex flex-col items-end gap-0.5">
+                  <span className="text-sm font-semibold tabular-nums">
+                    {l.price}
+                  </span>
+                  <span className="text-xs font-semibold text-down tabular-nums">
+                    ▼ −{Math.abs(l.chg).toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DashboardCard>
+      </div>
+    </section>
   );
 }

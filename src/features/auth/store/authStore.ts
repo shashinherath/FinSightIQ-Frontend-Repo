@@ -30,8 +30,13 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isAuthenticated: false,
+  user: {
+    id: "usr_rachel_osei",
+    name: "Rachel Osei",
+    email: "rachel.osei@firm.com",
+    role: "Analyst",
+  },
+  isAuthenticated: true,
   status: "idle",
   error: null,
   login: async (values) => {
@@ -45,7 +50,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         id: createUserId(),
         name: values.email.split("@")[0] ?? "User",
         email: values.email,
-        role: "Administrator",
+        role: "Analyst",
       },
     });
   },
@@ -73,5 +78,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     }),
   clearError: () => set({ error: null }),
   setRole: (role) =>
-    set((state) => (state.user ? { user: { ...state.user, role } } : state)),
+    set((state) => ({
+      user: state.user
+        ? { ...state.user, role }
+        : {
+            id: "usr_rachel_osei",
+            name: "Rachel Osei",
+            email: "rachel.osei@firm.com",
+            role,
+          },
+    })),
 }));

@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Menu } from "lucide-react";
+import { Menu, Activity } from "lucide-react";
 import {
   NAVIGATION_ITEMS,
   NAVIGATION_FOOTER_ITEMS,
@@ -18,7 +18,10 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 
 export function MobileDrawer() {
   const [open, setOpen] = useState(false);
-  const role = useAuthStore((state) => state.user?.role ?? "Administrator");
+  const role = useAuthStore((state) => state.user?.role ?? "Analyst");
+  const mainItems = NAVIGATION_ITEMS.filter(
+    (item) => !item.roles || item.roles.includes(role),
+  );
   const footerItems = NAVIGATION_FOOTER_ITEMS.filter(
     (item) => !item.roles || item.roles.includes(role),
   );
@@ -38,18 +41,14 @@ export function MobileDrawer() {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="flex w-[280px] flex-col p-0">
-        <SheetHeader className="flex h-16 flex-row items-center gap-3 space-y-0 border-b px-6 text-left">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
-            <span className="text-xs font-bold text-primary-foreground">
-              FQ
-            </span>
-          </span>
+        <SheetHeader className="flex h-16 flex-row items-center gap-3 space-y-0 border-b border-border px-6 text-left">
+          <Activity className="h-6 w-6 shrink-0 text-primary" />
           <SheetTitle className="m-0 font-display text-lg font-bold">
             FinSight<span className="text-muted-foreground">IQ</span>
           </SheetTitle>
         </SheetHeader>
         <nav className="flex flex-col gap-1 overflow-y-auto p-4">
-          {NAVIGATION_ITEMS.map((item) => (
+          {mainItems.map((item) => (
             <NavLink
               key={item.href}
               to={item.href}

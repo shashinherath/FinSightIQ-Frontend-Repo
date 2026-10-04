@@ -6,6 +6,8 @@
   :root {
     --font-display: "Space Grotesk", "IBM Plex Sans", sans-serif;
     --font-body: "IBM Plex Sans", "Space Grotesk", sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -26,11 +28,76 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.75rem;
+
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+
+    /* Resolved aliases matching FinSightIQ design tokens */
+    --color-bg: hsl(var(--background));
+    --color-fg: hsl(var(--foreground));
+    --color-surface-card: hsl(var(--card));
+    --color-surface-muted: hsl(var(--muted));
+    --color-surface-popover: hsl(var(--popover));
+    --color-primary: hsl(var(--primary));
+    --color-primary-fg: hsl(var(--primary-foreground));
+    --color-secondary: hsl(var(--secondary));
+    --color-secondary-fg: hsl(var(--secondary-foreground));
+    --color-accent: hsl(var(--accent));
+    --color-accent-fg: hsl(var(--accent-foreground));
+    --color-text-body: hsl(var(--foreground));
+    --color-text-muted: hsl(var(--muted-foreground));
+    --color-border: hsl(var(--border));
+    --color-border-soft: hsl(var(--border) / 0.6);
+    --color-input: hsl(var(--input));
+    --color-ring: hsl(var(--ring));
+    --color-danger: hsl(var(--destructive));
+    --color-danger-fg: hsl(var(--destructive-foreground));
+    --color-danger-tint: hsl(var(--destructive) / 0.1);
+
+    /* Market semantics */
+    --color-up: #10b981;
+    --color-up-strong: #34d399;
+    --color-up-tint: rgb(16 185 129 / 0.15);
+    --color-down: hsl(var(--destructive));
+    --color-down-tint: hsl(var(--destructive) / 0.15);
+    --color-hold: #f59e0b;
+    --color-hold-strong: #fbbf24;
+    --color-hold-tint: rgb(245 158 11 / 0.15);
+    --color-fx: #3b82f6;
+    --color-fx-soft: #60a5fa;
+    --color-live: #ef4444;
+
+    /* Metrics & spacing */
+    --sidebar-width: 256px;
+    --sidebar-width-collapsed: 80px;
+    --navbar-height: 64px;
+
+    /* Radii */
+    --radius-none: 0;
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: 16px;
+    --radius-2xl: 24px;
+    --radius-full: 9999px;
+
+    /* Elevation */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md:
+      0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg:
+      0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl:
+      0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+    /* Durations */
+    --duration-fast: 150ms;
+    --duration-base: 200ms;
+    --duration-slow: 300ms;
   }
 
   .dark {
@@ -70,6 +137,44 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: var(--font-body);
+    transition:
+      background-color var(--duration-slow),
+      color var(--duration-slow);
+  }
+}
+
+/* Theme switch animations matching prototype */
+html.theme-anim,
+html.theme-anim *:not(svg *) {
+  transition:
+    background-color 300ms ease,
+    border-color 300ms ease,
+    color 300ms ease,
+    fill 300ms ease,
+    stroke 300ms ease,
+    box-shadow 300ms ease !important;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
