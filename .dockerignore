@@ -12,3 +12,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Local environment files must never leak into the image (they override build args)
+.env
+.env.*
+!.env.example

@@ -13,6 +13,14 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
+# Public, non-secret build-time configuration (Vite inlines import.meta.env.VITE_*).
+ARG VITE_API_BASE_URL
+ARG VITE_SIGNALR_URL
+ARG VITE_USE_MOCKS=false
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
+    VITE_SIGNALR_URL=$VITE_SIGNALR_URL \
+    VITE_USE_MOCKS=$VITE_USE_MOCKS
+
 # Copy source and build
 COPY . .
 RUN pnpm run build
